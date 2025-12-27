@@ -1,0 +1,14 @@
+{
+	"nodes":[
+		{"id":"9dbe0f923881d4ba","x":-140,"y":120,"width":160,"height":60,"type":"text","text":"一般模式/正常"},
+		{"id":"9f809076f50c592b","x":-560,"y":-40,"width":200,"height":60,"type":"text","text":"在Shell命令行模式下"},
+		{"id":"65a637ffc8293956","x":-522,"y":320,"width":125,"height":60,"type":"text","text":"编辑模式"},
+		{"id":"9cbe93f9bc0b5393","x":220,"y":125,"width":200,"height":55,"type":"text","text":"命令模式/:wq  :q :q!"}
+	],
+	"edges":[
+		{"id":"059e11f1b6e23801","fromNode":"9f809076f50c592b","fromSide":"right","toNode":"9dbe0f923881d4ba","toSide":"left","color":"1","label":"#Vim xxx"},
+		{"id":"dcff324f50e642b3","fromNode":"9dbe0f923881d4ba","fromSide":"left","toNode":"65a637ffc8293956","toSide":"right","fromEnd":"arrow","color":"4","label":"i 或者 a///ESC"},
+		{"id":"777bdaed3f901c40","fromNode":"9dbe0f923881d4ba","fromSide":"right","toNode":"9cbe93f9bc0b5393","toSide":"left","fromEnd":"arrow","color":"6","label":"：或者 /\nESC"},
+		{"id":"06143cf1c397b239","fromNode":"9cbe93f9bc0b5393","fromSide":"right","toNode":"88a7da12aaf5a574","toSide":"left"}
+	]
+}

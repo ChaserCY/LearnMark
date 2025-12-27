@@ -1,0 +1,20 @@
+{
+	"nodes":[
+		{"id":"8e5041f987e47791","type":"file","file":"图片/Pasted image 20251111204349.png","x":-1084,"y":-680,"width":804,"height":478},
+		{"id":"b680680fc6611d68","type":"file","file":"图片/Pasted image 20251111213625.png","x":-1240,"y":-160,"width":1079,"height":347},
+		{"id":"9a54f55da1ecf39b","type":"file","file":"图片/Pasted image 20251122203543.png","x":-160,"y":-13,"width":799,"height":425},
+		{"id":"6b26c290faf2a14c","type":"file","file":"图片/Pasted image 20251122204232.png","x":-741,"y":480,"width":1380,"height":640},
+		{"id":"b701725b4ef10d79","type":"file","file":"图片/Pasted image 20251122204454.png","x":-741,"y":1120,"width":1360,"height":835},
+		{"id":"0d9c24e3a93aea7e","type":"file","file":"图片/Pasted image 20251122211609.png","x":639,"y":560,"width":1129,"height":875},
+		{"id":"267691568da5f3d8","type":"file","file":"图片/Pasted image 20251122212323.png","x":639,"y":1435,"width":1129,"height":792},
+		{"id":"39a2a5d2806d2ed6","type":"file","file":"图片/Pasted image 20251122214314.png","x":-722,"y":1973,"width":1341,"height":508},
+		{"id":"50b4f62dcef4681c","type":"file","file":"图片/Pasted image 20251122214347.png","x":619,"y":2227,"width":1536,"height":720},
+		{"id":"2437cbbd9d288ece","type":"file","file":"图片/Pasted image 20251122214905.png","x":-1050,"y":2481,"width":1669,"height":1013},
+		{"id":"4fdbf5ea2e4a69f1","type":"file","file":"图片/Pasted image 20251122215737.png","x":2155,"y":1675,"width":1666,"height":1105},
+		{"id":"c15e8df73b4930d3","type":"file","file":"图片/Pasted image 20251112202440.png","x":-162,"y":-1160,"width":804,"height":561},
+		{"id":"730cc51627187f63","type":"file","file":"图片/Pasted image 20251122205732.png","x":1880,"y":-520,"width":1060,"height":721},
+		{"id":"f791f3f731b4ecc5","type":"file","file":"图片/Pasted image 20251122202653.png","x":720,"y":-1280,"width":1040,"height":690},
+		{"id":"e0c0b48b06f0ea41","type":"file","file":"图片/Pasted image 20251122211136.png","x":700,"y":-40,"width":881,"height":520}
+	],
+	"edges":[]
+}

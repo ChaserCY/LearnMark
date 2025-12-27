@@ -1,0 +1,14 @@
+{
+	"nodes":[
+		{"id":"da7a8e88f32d70ab","x":-60,"y":-20,"width":80,"height":60,"type":"text","text":"Tom"},
+		{"id":"335d7e84cf061b6c","x":160,"y":-20,"width":80,"height":60,"type":"text","text":"root"},
+		{"id":"4a25904f31c35f04","x":-280,"y":-20,"width":80,"height":60,"type":"text","text":"退出系统"},
+		{"id":"613967674d50115f","x":-92,"y":200,"width":145,"height":60,"type":"text","text":"初始所在用户"}
+	],
+	"edges":[
+		{"id":"1806184d4be890f4","fromNode":"da7a8e88f32d70ab","fromSide":"top","toNode":"335d7e84cf061b6c","toSide":"top","label":"su - root"},
+		{"id":"473e32d620572321","fromNode":"335d7e84cf061b6c","fromSide":"bottom","toNode":"da7a8e88f32d70ab","toSide":"bottom","label":"logout"},
+		{"id":"2b242927e45f488c","fromNode":"da7a8e88f32d70ab","fromSide":"left","toNode":"4a25904f31c35f04","toSide":"right","label":"logout"},
+		{"id":"b549662f79c8519f","fromNode":"613967674d50115f","fromSide":"top","toNode":"da7a8e88f32d70ab","toSide":"bottom","color":"2"}
+	]
+}

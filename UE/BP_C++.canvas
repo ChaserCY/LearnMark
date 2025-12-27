@@ -1,0 +1,29 @@
+{
+	"nodes":[
+		{"id":"9ff9ff874c062984","x":-340,"y":-60,"width":280,"height":60,"type":"text","text":"C++和蓝图（BP）之间的关系"},
+		{"id":"5ed39defd99630be","x":80,"y":200,"width":250,"height":60,"type":"text","text":"蓝图"},
+		{"id":"8fb3e4d8e00957aa","x":80,"y":-260,"width":250,"height":60,"type":"text","text":"C++ "},
+		{"id":"1344b16b28d54c06","x":505,"y":-440,"width":250,"height":60,"type":"text","text":"代码"},
+		{"id":"fb29cc5f256b63f3","x":480,"y":-340,"width":300,"height":60,"type":"text","text":"适用于编写底层操作代码，可以访问蓝图没有办法访问的核心"},
+		{"id":"87f48c0f582fe22c","x":505,"y":-260,"width":250,"height":60,"type":"text","text":"适用于逻辑比较复杂的游戏"},
+		{"id":"8c041ca9b3b90b81","x":505,"y":-180,"width":250,"height":60,"type":"text","text":"适用于定制功能"},
+		{"id":"94cacf3dd4f40601","x":505,"y":-90,"width":250,"height":60,"type":"text","text":"适用于需要外部交互的时候"},
+		{"id":"ffd6bdb3c564a270","x":480,"y":100,"width":250,"height":60,"type":"text","text":"节点"},
+		{"id":"db9e7559bb0738e3","x":480,"y":200,"width":275,"height":60,"type":"text","text":"适用于不需要频繁修改的内容UI"},
+		{"id":"1a3213e8464d91ff","x":480,"y":300,"width":250,"height":60,"type":"text","text":"适用于逻辑简单的"},
+		{"id":"d0853d86811447d9","x":480,"y":380,"width":250,"height":60,"type":"text","text":"找错误比较快"}
+	],
+	"edges":[
+		{"id":"847c2a819b021b0c","fromNode":"9ff9ff874c062984","fromSide":"top","toNode":"8fb3e4d8e00957aa","toSide":"left"},
+		{"id":"088a3aec2007bbf0","fromNode":"9ff9ff874c062984","fromSide":"bottom","toNode":"5ed39defd99630be","toSide":"left"},
+		{"id":"7ad0adabdd1dfccc","fromNode":"8fb3e4d8e00957aa","fromSide":"right","toNode":"1344b16b28d54c06","toSide":"left"},
+		{"id":"a109484c8ce7514c","fromNode":"8fb3e4d8e00957aa","fromSide":"right","toNode":"fb29cc5f256b63f3","toSide":"left"},
+		{"id":"cf6aa2f133250573","fromNode":"8fb3e4d8e00957aa","fromSide":"right","toNode":"87f48c0f582fe22c","toSide":"left"},
+		{"id":"7dc29ee998468cb3","fromNode":"8fb3e4d8e00957aa","fromSide":"right","toNode":"8c041ca9b3b90b81","toSide":"left"},
+		{"id":"1db232656acac526","fromNode":"8fb3e4d8e00957aa","fromSide":"right","toNode":"94cacf3dd4f40601","toSide":"left"},
+		{"id":"2151a46effc01f99","fromNode":"5ed39defd99630be","fromSide":"right","toNode":"ffd6bdb3c564a270","toSide":"left"},
+		{"id":"4ce1bb99d064a897","fromNode":"5ed39defd99630be","fromSide":"right","toNode":"db9e7559bb0738e3","toSide":"left"},
+		{"id":"151f34b1f3220847","fromNode":"5ed39defd99630be","fromSide":"right","toNode":"1a3213e8464d91ff","toSide":"left"},
+		{"id":"8306bbb6c36ef273","fromNode":"5ed39defd99630be","fromSide":"right","toNode":"d0853d86811447d9","toSide":"left"}
+	]
+}

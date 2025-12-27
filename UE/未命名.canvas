@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"a47a0502f5fc40ae","x":0,"y":-360,"width":250,"height":60,"type":"text","text":"自定义事件：播放伤害数字"},
+		{"id":"02be05624409a241","x":-280,"y":-60,"width":125,"height":60,"type":"text","text":"BP_敌人"},
+		{"id":"c271fb88ea8a2c8a","x":0,"y":-260,"width":250,"height":60,"type":"text","text":"控件组件：伤害数字(绑定UI的控件)"},
+		{"id":"370aa401ec74401f","x":0,"y":-170,"width":250,"height":70,"type":"text","text":"函数：显示伤害数字->调用UI的自定义事件"},
+		{"id":"ff1ed03b857e88d2","x":-287,"y":-230,"width":140,"height":60,"type":"text","text":"BP_伤害数字"},
+		{"id":"fb66c9690851879a","x":-297,"y":-360,"width":160,"height":60,"type":"text","text":"UI_伤害数字"},
+		{"id":"d462234218ecaf0b","x":0,"y":-60,"width":250,"height":60,"type":"text","text":"受击时，创建BP，并追加在敌人身上"},
+		{"id":"31c5ad4c8045c971","x":280,"y":-200,"width":250,"height":60,"type":"text","text":"让UI设置在自己控件上，成为敌人触发的最小单元"},
+		{"id":"e25d34c61284dea8","x":280,"y":-360,"width":250,"height":60,"type":"text","text":"定义表现形式"},
+		{"id":"9b672e9875f9aff4","x":280,"y":-60,"width":250,"height":60,"type":"text","text":"决定触发时机，显示什么数值，显示多少个"}
+	],
+	"edges":[
+		{"id":"62aeac0fadc93a17","fromNode":"fb66c9690851879a","fromSide":"right","toNode":"a47a0502f5fc40ae","toSide":"left"},
+		{"id":"816f3d7e2f7b16ed","fromNode":"ff1ed03b857e88d2","fromSide":"right","toNode":"c271fb88ea8a2c8a","toSide":"left"},
+		{"id":"8d9b2560bca1c94a","fromNode":"ff1ed03b857e88d2","fromSide":"right","toNode":"370aa401ec74401f","toSide":"left"},
+		{"id":"8c0a605b4a94ede2","fromNode":"02be05624409a241","fromSide":"right","toNode":"d462234218ecaf0b","toSide":"left"},
+		{"id":"8ed9138fbd627329","fromNode":"02be05624409a241","fromSide":"top","toNode":"ff1ed03b857e88d2","toSide":"bottom","label":"生成"},
+		{"id":"e730121fa8d53e4c","fromNode":"ff1ed03b857e88d2","fromSide":"top","toNode":"fb66c9690851879a","toSide":"bottom","label":"调用转换形式"}
+	]
+}
