@@ -52,6 +52,9 @@ reverse(Q.begin(),Q.end())           //反转数组
 
 ## queue容器
 **queue容器不支持find操作和迭代器**
+- 添加：Q.push()
+- 查询：Q.front()    Q.back()
+- 删除队头：Q.pop()
 - `std::queue` 是一个适配器容器，不提供迭代器功能
 - 不能使用 `Q.find()` 或 `Q.begin()` / `Q.end()`
 - 查找元素方法：
@@ -429,6 +432,17 @@ for (auto& p : mp) {
 for (auto& p : ump) {
     cout << p.first << ":" << p.second << " "; // 顺序由哈希值决定
 }
+```
+反向遍历(`rbegin()` 到`rend()`):
+```cpp
+ for (auto it = numCount.rbegin(); it != numCount.rend(); ++it) {
+            sumCount += it->second; // 累加当前元素的出现次数
+
+            // 3. 累加和 ≥ k 时，当前元素就是第k大元素
+            if (sumCount >= k) {
+                return it->first;
+            }
+        }
 ```
 
 ## set和unordered_set（自动去重序列)
