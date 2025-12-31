@@ -1,17 +1,21 @@
 {
 	"nodes":[
-		{"id":"9ff9ff874c062984","x":-340,"y":-60,"width":280,"height":60,"type":"text","text":"C++和蓝图（BP）之间的关系"},
-		{"id":"5ed39defd99630be","x":80,"y":200,"width":250,"height":60,"type":"text","text":"蓝图"},
-		{"id":"8fb3e4d8e00957aa","x":80,"y":-260,"width":250,"height":60,"type":"text","text":"C++ "},
-		{"id":"1344b16b28d54c06","x":505,"y":-440,"width":250,"height":60,"type":"text","text":"代码"},
-		{"id":"fb29cc5f256b63f3","x":480,"y":-340,"width":300,"height":60,"type":"text","text":"适用于编写底层操作代码，可以访问蓝图没有办法访问的核心"},
-		{"id":"87f48c0f582fe22c","x":505,"y":-260,"width":250,"height":60,"type":"text","text":"适用于逻辑比较复杂的游戏"},
-		{"id":"8c041ca9b3b90b81","x":505,"y":-180,"width":250,"height":60,"type":"text","text":"适用于定制功能"},
-		{"id":"94cacf3dd4f40601","x":505,"y":-90,"width":250,"height":60,"type":"text","text":"适用于需要外部交互的时候"},
-		{"id":"ffd6bdb3c564a270","x":480,"y":100,"width":250,"height":60,"type":"text","text":"节点"},
-		{"id":"db9e7559bb0738e3","x":480,"y":200,"width":275,"height":60,"type":"text","text":"适用于不需要频繁修改的内容UI"},
-		{"id":"1a3213e8464d91ff","x":480,"y":300,"width":250,"height":60,"type":"text","text":"适用于逻辑简单的"},
-		{"id":"d0853d86811447d9","x":480,"y":380,"width":250,"height":60,"type":"text","text":"找错误比较快"}
+		{"id":"9ff9ff874c062984","type":"text","text":"C++和蓝图（BP）之间的关系","x":-340,"y":-60,"width":280,"height":60},
+		{"id":"5ed39defd99630be","type":"text","text":"蓝图","x":80,"y":200,"width":250,"height":60},
+		{"id":"8fb3e4d8e00957aa","type":"text","text":"C++ ","x":80,"y":-260,"width":250,"height":60},
+		{"id":"1344b16b28d54c06","type":"text","text":"代码","x":505,"y":-440,"width":250,"height":60},
+		{"id":"fb29cc5f256b63f3","type":"text","text":"适用于编写底层操作代码，可以访问蓝图没有办法访问的核心","x":480,"y":-340,"width":300,"height":60},
+		{"id":"87f48c0f582fe22c","type":"text","text":"适用于逻辑比较复杂的游戏","x":505,"y":-260,"width":250,"height":60},
+		{"id":"8c041ca9b3b90b81","type":"text","text":"适用于定制功能","x":505,"y":-180,"width":250,"height":60},
+		{"id":"94cacf3dd4f40601","type":"text","text":"适用于需要外部交互的时候","x":505,"y":-90,"width":250,"height":60},
+		{"id":"ffd6bdb3c564a270","type":"text","text":"节点","x":480,"y":100,"width":250,"height":60},
+		{"id":"db9e7559bb0738e3","type":"text","text":"适用于不需要频繁修改的内容UI","x":480,"y":200,"width":275,"height":60},
+		{"id":"1a3213e8464d91ff","type":"text","text":"适用于逻辑简单的","x":480,"y":300,"width":250,"height":60},
+		{"id":"d0853d86811447d9","type":"text","text":"找错误比较快","x":480,"y":380,"width":250,"height":60},
+		{"id":"0acb8699dfc8e166","type":"file","file":"UE/图片/UE/BP_C++/IMG-20251231114543448.png","x":-70,"y":380,"width":400,"height":170},
+		{"id":"1857293da7c5bdb1","type":"file","file":"UE/图片/UE/BP_C++/IMG-20251231114646554.png","x":355,"y":500,"width":400,"height":176},
+		{"id":"e28e82265097d1e2","type":"file","file":"UE/图片/UE/BP_C++/IMG-20251231114816009.png","x":-60,"y":589,"width":400,"height":174},
+		{"id":"c6fcb2d428473b54","x":355,"y":700,"width":400,"height":194,"type":"file","file":"UE/图片/UE/BP_C++/IMG-20251231114958825.png"}
 	],
 	"edges":[
 		{"id":"847c2a819b021b0c","fromNode":"9ff9ff874c062984","fromSide":"top","toNode":"8fb3e4d8e00957aa","toSide":"left"},
