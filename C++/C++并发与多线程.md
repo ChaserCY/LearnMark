@@ -1,3 +1,8 @@
+# VS2022
+打断点，在最左侧
+监视在最下方栏，然后可以shift + F9快速监视，来看内存地址
+
+查看线程id    std::this_thread::get_id()
 # 第一节
 ## 一，并发，进程，线程的基本概念和综述
 ### 并发和并行：
@@ -157,3 +162,67 @@ auto mylamthread = []{
 thread mytobj(mylamthread);
 mytobj.detach();
 ```
+
+# 第三节
+## 一，传递临时对象作为线程参数
+```cpp
+#include <iostream>
+#include<thread>
+using namespace std;
+
+//void myprint(const int& i, char* pmybuf)
+void myprint(const int& i, const string &pmybuf)
+ {
+    cout << i << endl; //分析：i并不是mvar的引用，实际是值的传递，即便主线程detach了子线程，那么子线程还是安全的
+     
+    cout << pmybuf.c_str() << endl;  //指针在detach子线程时，绝对会有问题 
+    return;
+}
+
+int main() {
+    
+   //一：传递临时对象作为线程参数
+    int mvar = 1;
+    int& mvary = mvar;
+    char mybuf[] = "this is a test！";
+    thread mytobj(myprint, mvar, mybuf);//存在main执行完了，系统才用mybuf去转string
+    thread mytobj(myprint, mvar, string(mybuf));
+    mytobj.detach();
+    // mytobj.join();
+    cout << "I Love China"<<endl;
+    return 0;
+}
+```
+
+### 陷阱一：
+- 在线程thread中，const int& i，你传递mvar时，线程会自动拷贝一份mvar的副本，函数里的const int& i实际引用的是这个 “副本”，而不是main里的原始mvar
+- 在**非多线程的普通函数调用场景**中，`const int& i`（或`int& i`）**没有副本**，直接绑定值本身
+- 函数参数传递指针，指针在detach子线程时，绝对会有问题 
+### 陷阱二：
+- mybuf到底是在什么时候转换成string。存在main执行完了，系统才用mybuf去转string
+-  只要引用临时构造的A类对象作为参数传递给线程，那么就一定能在主线程结束之前构造出来
+- ==这个转换是主线程的一部分==,==而隐式转换是子线程的部分==
+### 总结：
+- 若传递int这种简单类型参数，建议都是值传递,不要用引用。防止节外生枝。
+- 如果传递类对象，避免隐式类型转换，全部都在创建线程一行构建出临时对象来，然后在参数里用引用来接
+- 建议不用detach（），就不存在局部变量失效导致线程对内存的非法引用问题
+## 二，临时对象作为线程参数
+- 线程id概念:id是个数字，每个线程(不管是主线程还是子线程)实际上都对应着一个数字，而且每个线程对应
+- 也就是说，不同的线程，它的线程id(数字)必然是不同;线程id可以用c++标准库里的函数来获取。std::this_thread::get_id（）来获取;
+## 三，传递类对象，智能指针作为线程参数
+- 正常情况下，类对象引用传递进去，会进行拷贝，导致无法通过引用来修改
+- 使用==std::ref()==  包裹传递参数
+- &*myobj *== std::ref(*myobj*)
+- 使用智能指针（操作相同内存地址）
+	- unique_ptr\<int> myp(new int(100));智能指针声明
+	- void myprint3(unique_ptr\<int> pzn){}; 智能指针参数
+## 四，用成员函数指针做线程函数
+在类中创建方法，来构建子线程
+```cpp
+A myobj(10);//生成一个类对象
+std::thread mytobj(&A::thread_work, &myobj, 15);//&myobj == std::ref(myobj)，是thread_work（）方法调用
+std::thread mytobj(myobj, 15);//复制拷贝一次，调用operator（）方法
+mytobj.join();
+
+```
+![](图片/C++/C++并发与多线程/IMG-20251231205146823.png)
