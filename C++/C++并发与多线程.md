@@ -2,6 +2,8 @@
 打断点，在最左侧
 监视在最下方栏，然后可以shift + F9快速监视，来看内存地址
 
+栈上创建 A create_name();
+堆上创建 A create_name = new A();
 查看线程id    std::this_thread::get_id()
 # 第一节
 ## 一，并发，进程，线程的基本概念和综述
