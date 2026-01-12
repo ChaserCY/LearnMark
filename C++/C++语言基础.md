@@ -293,7 +293,7 @@ ios::sync_with_stdio(false); // false可以是0
 	    return a < b;  //小的排前面（升序）
 	 }
  ```
-
+第一个数字是小于，就是小在前，大于就是大在前
 lamada版(格式：[](const 两个Vector中&基本比较元素){bool 函数内部})
 ```cpp
 	 vector<int> T;
