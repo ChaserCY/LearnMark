@@ -1,0 +1,13 @@
+{
+	"nodes":[
+		{"id":"6722180b19feddb3","type":"text","text":"最泛SKILL(总)","x":-200,"y":-340,"width":250,"height":60},
+		{"id":"62864466a88820c7","type":"text","text":"SKILL_01.md","x":-450,"y":-140,"width":250,"height":60},
+		{"id":"7410705705b4492c","type":"text","text":"SKILL_02.md","x":40,"y":-140,"width":250,"height":60},
+		{"id":"982bc302d3582ace","type":"text","text":"必须加载SKILL","x":-820,"y":-340,"width":250,"height":60},
+		{"id":"6870bdde3be4fcbe","type":"text","text":"根据实际情况，选择加载SKILL","x":-820,"y":-140,"width":280,"height":60}
+	],
+	"edges":[
+		{"id":"068185d8e4a1d8e3","fromNode":"6722180b19feddb3","fromSide":"bottom","toNode":"62864466a88820c7","toSide":"top","color":"2","label":"内容中写入：条件1"},
+		{"id":"6f1551e1dc1fc85a","fromNode":"6722180b19feddb3","fromSide":"bottom","toNode":"7410705705b4492c","toSide":"top","color":"4","label":"条件2"}
+	]
+}
