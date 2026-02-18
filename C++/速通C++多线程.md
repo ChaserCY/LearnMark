@@ -287,7 +287,9 @@ m1.unlock();
 为了避免死锁，所有线程获取锁的**顺序必须一致**。  
 如果你把 `func_2` 改成和 `func_1` 一样：**先锁 m1，再锁 m2**，死锁就立刻解决了。因为如果 `t1` 拿到了 `m1`，`t2` 在第一步申请 `m1` 时就会被卡住，根本没机会去拿 `m2`，从而避免了互相卡死。
 
-# 五，lock_guard与unipue_lock
+# 五，lock_guard与unique_lock
+- **std::lock_guard**：轻量级，构造时锁，析构时开，功能简单，性能最好。
+- **std::unique_lock**：重量级，功能强大（支持中途解锁、延迟锁定、配合条件变量等），由于内部要维护状态，**性能比 lock_guard 差**。
 
 ## std::lock_guard
 - 创建：
@@ -328,7 +330,7 @@ int main() {
 	return 0;
 }
 ```
-## std::unipue_lock
+## std::unique_lock
 支持自动上锁和自动解锁
 而且还有更多功能，更常用，更安全
 - 构造1（自动加解锁）：
@@ -377,4 +379,154 @@ int main() {
 }
 ```
 
-# 六，call_once与使用场景
+# 六，call_once单例模式与使用场景(多线程)
+## 格式
+```cpp
+#include <thread>
+
+std::once_flag fff; //状态标记命名，几个不同的单例事件，就命名几个
+
+std::call_once(fff, <函数/线程>); //启动call_once功能，传入状态标记，看现在是什么情况
+
+
+```
+## 懒汉模式
+这里有关Log对象的返回，参数都要用==引用&==
+![](图片/C++/速通C++多线程/IMG-20260208224653767.png)
+- **生存期 (Lifetime)**：普通局部变量的生存期仅限于函数执行期间；而 ==static 变量的生存期是 **从首次初始化开始，直到整个程序结束**==。它**常驻内存**（数据段或 BSS 段）。
+    
+- **Meyers' Singleton**：这种写法以 C++ 专家 Scott Meyers 的名字命名。它是实现单例模式最优雅、最简洁、且**默认线程安全**的方式，比手写 if (instance == nullptr) { lock(); ... }（双重检查锁定）要高效且安全得多。
+
+## 饿汉模式
+![](图片/C++/速通C++多线程/IMG-20260210004415986.png)
+## 与普通锁(mutex)的区别
+![](图片/C++/速通C++多线程/IMG-20260211181313104.png)
+![](图片/C++/速通C++多线程/IMG-20260211181351528.png)
+
+# 七，condition_variable 与其使用场景
+## 概念
+**std::condition_variable** 是 C++ 标准库 <condition_variable> 头文件中定义的同步原语。
+
+- **功能**：它允许一个或多个线程 **阻塞（Block/Sleep）**，直到另一个线程修改了共享变量（条件），并通知（Notify）该条件变量。
+    
+- **机制**：
+    
+    - **等待端 (Consumer)**：持有锁 -> 检查条件 -> 如果条件不满足，调用 wait() -> **自动释放锁** 并进入睡眠 -> 被唤醒后 **自动重新拿锁** -> 再次检查条件。
+        
+    - **通知端 (Producer)**：持有锁（可选，但推荐） -> 修改条件（如向队列塞数据） -> 调用 notify_one() 或 notify_all() 唤醒等待的线程。
+        
+- **核心方法**：
+    
+    - wait（lock， predicate）： 阻塞等待。
+        
+    - notify_one(): 唤醒一个正在等待的线程。
+        
+    - notify_all(): 唤醒所有正在等待的线程。
+## 示例模型
+![](图片/C++/速通C++多线程/IMG-20260212223732182.png)
+## 应用方式
+```cpp
+#include<mutex>
+#include<condition_variable>  //所需头文件
+
+std::mutex mtx;//命名某一标志锁   
+std::condition_variable g_cv;//命名某一个消费等待标志
+
+std::unique_lock<std::mutex> lockk(mtx);//给线程的两处共同操作加了个自动锁
+
+g_cv.wait(lockk, []() {return !g_queue.empty();}); // 第二个参数：false：开始等待，之后接收到通知(g_cv.notify_one()执行)，等待结束。true:不等待
+
+g_cv.notify_one();//符合某先后条件，开始通知等待的线程
+
+```
+## 源码参考
+![](图片/C++/速通C++多线程/IMG-20260212224858384.png)
+
+# 八，跨平台线程池
+可以使用单例模式，智能指针，call_once拓展线程池
+源码：
+```cpp
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <functional>
+#include <queue>
+class ThreadPool {
+public:
+	ThreadPool(int numTreads) :stop(false) {   //线程池构造函数，创建num个线程
+		for (int i = 0; i < numTreads; i++) {
+			threads.emplace_back([this] {//添加线程，构造std::thread 即启动线程
+				while (1) 
+				{
+					std::unique_lock<std::mutex> lock(mtx);
+					condition.wait(lock, [this] { return !tasks.empty() || stop; });//当队列为空且线程池停止时，线程等待，wait的false是等待
+					
+					if (stop && tasks.empty())return;//当队列为空且线程池停止时，线程退出循环
+
+					std::function<void()> task(std::move(tasks.front()));
+					tasks.pop(); //用于清理队列中已被清理队列中已被移动的“空移动的“空壳”元素<壳”元素
+					lock.unlock();//手动解锁
+					task();//执行任务
+				}
+				
+				});
+			
+		}
+	}
+	~ThreadPool() {
+		{
+			std::unique_lock<std::mutex> lock(mtx);
+			stop = true;
+		}//这个中括号出现，是为了手动限制锁的作用域
+
+		condition.notify_all();
+		for (auto& t : threads) 
+		{
+			t.join();
+		}
+	}
+
+	template<class F, class... Args>//标记下一个函数，不是具体代码，根据实体输入来读取代码
+	void enqueue(F&& f, Args&&... args) {//F&& f:万能引用，能接受任意类型的一个函数，Args&&... args:万能引用，表示任意参数数量和类型
+		std::function<void()>task =//添加更改了“任意参数”的函数对象（泛型函数对象）
+			std::bind(std::forward<F>(f), std::forward<Args>(args)...);//bind:将一个函数对象和一组参数绑定到一起，返回一个新的函数对象，这个函数对象可以像原函数一样被调用，但是会将参数绑定到一起。
+		//forward:“完美转发”，将参数属性(左右值)不变，传递给外层函数。不用的话：当是右值(f为Lambda)时，将会退化为左值，进行多了一次拷贝，浪费性能
+		{
+			std::unique_lock<std::mutex> lock(mtx);
+			tasks.emplace(std::move(task));
+		}
+		condition.notify_one();
+	}
+
+
+
+private:
+	std::vector<std::thread> threads;//线程数组
+	std::queue<std::function<void()>> tasks; //任务列表队列
+
+	std::mutex mtx;
+	std::condition_variable condition;
+
+	bool stop;
+};
+
+
+
+int main() {
+	ThreadPool pool(4);
+
+	for (int i = 0; i < 10; i++) {
+		pool.enqueue([i] {
+			std::cout << "task : " << i << " is running " << std::endl;
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::cout << "task : " << i << " is done " << std::endl;
+
+			});
+	}
+
+	return 0;
+}
+
+```
