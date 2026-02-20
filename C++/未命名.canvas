@@ -1,15 +1,15 @@
 {
 	"nodes":[
-		{"id":"8de4204c9018019a","x":-120,"y":-360,"width":250,"height":60,"type":"text","text":"创建ThreadPool类"},
-		{"id":"73c7a913701ac1b6","x":-905,"y":-160,"width":250,"height":60,"type":"text","text":"1.构造函数，构造一定数量n的线程池"},
-		{"id":"f42bc67db8769ba1","x":-870,"y":-80,"width":180,"height":60,"type":"text","text":"for了n次循环\n"},
-		{"id":"b845524c729e1a71","x":-905,"y":0,"width":250,"height":380,"type":"text","text":"每次循环包括：\n1.添加线程到线程组\n2.每个线程中需要\n- 上锁\n- 任务空时等待（没有停）\n- 终止条件（任务空且停）\n- 提取任务组中头个任务\n- 更新原任务组（提出来的位置删了）\n- 手动解锁(==与第一条对应==)\n- 执行任务"},
-		{"id":"78207deda1395cd0","x":-520,"y":-160,"width":200,"height":60,"type":"text","text":"2.定义类中私有变量"},
-		{"id":"0d43afa9badc75c8","x":-545,"y":-50,"width":250,"height":390,"type":"text","text":"1.线程组（vector\\<thread>）\n2.任务队列(queue<function<void>>)\n3.操作任务队列的互斥锁\n(mutex mtx)\n4.条件等待标记\n(condition_variable)\n5.全局线程组结束标记\n(bool stop)\n"},
-		{"id":"ab372dd8e5b2c6b1","x":-245,"y":-160,"width":250,"height":60,"type":"text","text":"3.析构函数(在线程池作用结束时)"},
-		{"id":"731dce467bc56517","x":-245,"y":-50,"width":250,"height":370,"type":"text","text":"1.更改全局结束标记(执行这步操作要加锁)\nstop=true；\n2.唤醒所有线程上的等待\ncondition.notify_all();\n3.遍历所有线程，主线程等待所有结束\nt.join();"},
-		{"id":"77c23c8403e8395d","x":100,"y":-160,"width":250,"height":60,"type":"text","text":"4.添加任务函数(参泛)"},
-		{"id":"f830a497c0f63dd1","x":100,"y":-50,"width":250,"height":370,"type":"text","text":""}
+		{"id":"73c7a913701ac1b6","type":"text","text":"1.构造函数，构造一定数量n的线程池","x":-905,"y":-160,"width":250,"height":60},
+		{"id":"f42bc67db8769ba1","type":"text","text":"for了n次循环\n","x":-870,"y":-80,"width":180,"height":60},
+		{"id":"b845524c729e1a71","type":"text","text":"每次循环包括：\n1.添加线程到线程组\n2.每个线程中需要\n- 上锁\n- 任务空时等待（没有停）\n- 终止条件（任务空且停）\n- 提取任务组中头个任务\n- 更新原任务组（提出来的位置删了）\n- 手动解锁(==与第一条对应==)\n- 执行任务","x":-905,"y":0,"width":250,"height":380},
+		{"id":"78207deda1395cd0","type":"text","text":"2.定义类中私有变量","x":-520,"y":-160,"width":200,"height":60},
+		{"id":"0d43afa9badc75c8","type":"text","text":"1.线程组（vector\\<thread>）\n2.任务队列(queue<function<void>>)\n3.操作任务队列的互斥锁\n(mutex mtx)\n4.条件等待标记\n(condition_variable)\n5.全局线程组结束标记\n(bool stop)\n","x":-545,"y":-50,"width":250,"height":390},
+		{"id":"ab372dd8e5b2c6b1","type":"text","text":"3.析构函数(在线程池作用结束时)","x":-245,"y":-160,"width":250,"height":60},
+		{"id":"77c23c8403e8395d","type":"text","text":"4.添加任务函数(参泛)[单个]","x":100,"y":-160,"width":250,"height":60},
+		{"id":"f830a497c0f63dd1","type":"text","text":"1.定义一个允许输入函数，多个参数的模板，以及对应入队函数\n2.定义单位任务std::function\n,使用std::bind连接<函数>和<参数>\n3.加入任务队列(加锁，std::move(单位任务))\n4.通知一个线程取消等待","x":100,"y":-50,"width":250,"height":370},
+		{"id":"8de4204c9018019a","type":"text","text":"创建ThreadPool类（线程池）","x":-370,"y":-360,"width":270,"height":60},
+		{"id":"731dce467bc56517","type":"text","text":"1.更改全局结束标记(执行这步操作要加锁)\nstop=true；\n2.唤醒所有线程上的等待\ncondition.notify_all();\n3.遍历所有线程，主线程等待所有结束\nt.join();","x":-245,"y":-50,"width":250,"height":370}
 	],
 	"edges":[
 		{"id":"d9e48daa9feafd32","fromNode":"73c7a913701ac1b6","fromSide":"bottom","toNode":"f42bc67db8769ba1","toSide":"top"},
@@ -20,6 +20,6 @@
 		{"id":"3a34049dc4e8c9f0","fromNode":"8de4204c9018019a","fromSide":"bottom","toNode":"ab372dd8e5b2c6b1","toSide":"top"},
 		{"id":"73c834c44b42d759","fromNode":"ab372dd8e5b2c6b1","fromSide":"bottom","toNode":"731dce467bc56517","toSide":"top"},
 		{"id":"8d61f4a7bfe9bd55","fromNode":"77c23c8403e8395d","fromSide":"bottom","toNode":"f830a497c0f63dd1","toSide":"top"},
-		{"id":"67eab6184728b1fe","fromNode":"8de4204c9018019a","fromSide":"bottom","toNode":"77c23c8403e8395d","toSide":"top"}
+		{"id":"ac94b66230cbc81e","fromNode":"8de4204c9018019a","fromSide":"right","toNode":"77c23c8403e8395d","toSide":"top"}
 	]
 }

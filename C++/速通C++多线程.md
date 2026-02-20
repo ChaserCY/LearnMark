@@ -1,6 +1,6 @@
 
 # 一，创建，运行线程
-std::thread <线程名>(<函数名>，<参数1>，...)
+std::thread <线程名>(<函数名>，<参数1>，...) //==创建会拷贝参数，如果传入参数不能拷贝，必须使用std::move()==
 <线程名>.join();  //等待子线程运行结束，才会继续主线程
 <线程名>.detach();//子与主同时运行，把子挂在后台的
 <线程名>.joinable();   //返回bool值，判定是否可以进行join或者detach
@@ -444,6 +444,9 @@ g_cv.notify_one();//符合某先后条件，开始通知等待的线程
 
 # 八，跨平台线程池
 可以使用单例模式，智能指针，call_once拓展线程池
+思路：
+![](未命名.canvas)
+
 源码：
 ```cpp
 #include <iostream>
@@ -530,3 +533,44 @@ int main() {
 }
 
 ```
+
+# 九，异步并发编程
+## 1.**std::future** 和 **std::async**
+<#include \<future>> 头文件
+![](图片/C++/速通C++多线程/IMG-20260219233619472.png)
+- 与Thread对比
+![](图片/C++/速通C++多线程/IMG-20260219233207666.png)
+## 2.packaged_task（thread与future的桥梁）
+这里packaged_task的意义：
+你可手动的去启动线程，而不是像async直接启动线程
+![](图片/C++/速通C++多线程/IMG-20260220165217075.png)
+## 3.std::promise
+在C++中，promise是一个类模板，用于在一个线程中产个值，并在另一个线程中获取这个值。promise通常与future和async一起使用，用于实现异步编程。
+```cpp
+void fun1(std::promise<int> &f) {
+
+	f.set_value(1000);
+}
+
+int main()
+{
+
+	std::promise<int> f; //创建一个promise对象，promise对象是一个模板类，可以用来传递一个值或者一个异常，promise对象可以用来创建一个future对象，future对象可以用来获取promise对象传递的值或者异常
+	auto future_result = f.get_future();
+
+	//std::thread t1(fun1, std::move(f));//std::promise对象是不可复制的，所以需要移动promise对象，std::move(f)将promise对象f转换为右值引用，传递给线程函数fun1
+	std::thread t1(fun1, std::ref(f)); //std::ref(f)将promise对象f转换为引用，传递给线程函数fun1
+	t1.join();
+
+	std::cout << future_result.get() << std::endl;
+
+	return 0;
+}
+```
+![](图片/C++/速通C++多线程/IMG-20260220171110359.png)
+
+# 十，std::atomic 原子操作
+头文件：\<atomic>
+==不用自己加锁，效率更高==
+std:atomic是C++11标准库中的一个模板类，用于实现多线程环境下的原子操作。它提供了一种线程安全的方式来访问和修改共享变量，可以避免多线程环境中的数据竞争问题。
+![](图片/C++/速通C++多线程/IMG-20260220181329131.png)
