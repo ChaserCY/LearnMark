@@ -8,10 +8,10 @@
 		{"id":"e5f3d3f224bb2965","type":"text","text":"len_tt","x":30,"y":60,"width":120,"height":60},
 		{"id":"ea0a065fb4305015","type":"text","text":"(哈希表存字母的频率)","x":-280,"y":-60,"width":230,"height":60},
 		{"id":"38d2b66da741710d","type":"text","text":"start记录最小覆盖子串的开始位置\nmin_len 记录最小长度\nr-l    查看当前子串的长度","x":-320,"y":160,"width":360,"height":100},
-		{"id":"fcdeac30b6d91e8a","type":"text","text":"1.先进行有窗口的滑动与记录哈希表，更新len_ss 和 T","x":-350,"y":300,"width":510,"height":60},
 		{"id":"4ef27cfbb3e5b4dc","type":"text","text":"2.当符合覆盖子串要求时，len_ss = len_tt,进行比较最小长度，并进行循环优化左窗口(直到优化到t中相关字符才停止)","x":-350,"y":390,"width":510,"height":60},
-		{"id":"4cc6032706629a49","type":"text","text":"滑动窗口","x":-545,"y":330,"width":110,"height":60},
-		{"id":"f36bbc3adb69ab0d","type":"text","text":"存目标字符串中字母的种类(用来判定是否符合覆盖子串的要求，比循环简洁)","x":-320,"y":50,"width":300,"height":80}
+		{"id":"4cc6032706629a49","type":"text","text":"滑动窗口","x":-540,"y":330,"width":110,"height":60},
+		{"id":"fcdeac30b6d91e8a","type":"text","text":"1.先进行有窗口的滑动与记录哈希表，更新len_ss 和 T","x":-350,"y":270,"width":510,"height":60},
+		{"id":"f36bbc3adb69ab0d","type":"text","text":"存目标字符串中字母的种类(用来判定是否符合覆盖子串的要求，比循环简洁)","x":-320,"y":50,"width":340,"height":80}
 	],
 	"edges":[
 		{"id":"e72b481b3a7d5aa4","fromNode":"fb074e6c2e8ce00f","fromSide":"bottom","toNode":"0d0952b18e8bcb02","toSide":"top"},

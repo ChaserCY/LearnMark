@@ -96,8 +96,9 @@ Q.pop_back( )            //删除最后一个元素
 	元素个数(是否存在):  Q.count(val)
 	
 	查找：Q.find(val)  返回迭代器，没有就是Q.end()
-
-
+![](图片/C++/C++语言基础/IMG-20260305210447088.png)
+![](图片/C++/C++语言基础/IMG-20260305210453972.png)
+==有序用 **set**， 无序用 **unordered_set**==
 
 
 ## 范围类查找
@@ -344,7 +345,13 @@ vec.push_back(make_tuple(2, "B")); // 先构造再插入,也可以直接push_bac
 
 
 
-## 向下，向上取整(正整数版)
+## 小数问题
+#### 禁用科学计数法
+		fixed << setprecision(0)
+#### 四舍五入
+		round()
+		printf("%.f",)
+
 #### 向上取整
 		(s + d - 1) / d
 		函数：ceil(s/d); //返回浮点数double
@@ -403,11 +410,7 @@ if (mp.count(3)) {
 
 - **`erase(key)`**：按 `key` 删除元素，返回删除的数量（0 或 1）。
 - **`erase(iterator)`**：按迭代器删除元素。
-    
-    cpp
-    
-    运行
-    
+
  ```cpp
    mp.erase(1); // 删除key=1的元素
    ump.erase(ump.find(2)); // 按迭代器删除
@@ -536,10 +539,24 @@ set<int> S(nums.begin(), nums.end());
 | **`<<`** | **左移 (Left Shift)**  | 二进制位全部左移，右补 0    | **乘 2 的 N 次方**     |
 | **`>>`** | **右移 (Right Shift)** | 二进制位全部右移         | **除 2 的 N 次方**     |
 | `^`      | 异或 (XOR)             | 相同为 0，不同为 1      | 无进位加法 (你刚用的那个)     |
+|          |                      |                  |                    |
 
 ---
 
 ### 2. 详细用法与技巧
+二进制翻转
+```cpp
+long long reverseBinary(long long x)
+{
+    long long r = 0;
+    while (x)
+    {
+        r = (r << 1) | (x & 1);//最右侧左移生成反转二进制，|用于复制x的最后一位，用完右移
+        x >>= 1;
+    }
+    return r;
+}
+```
 
 #### (1) 按位与 (`&`)
 
@@ -611,6 +628,13 @@ set<int> S(nums.begin(), nums.end());
     - **逻辑右移**（针对无符号数）：高位直接补 0。在 Java/JS 中有专门的 `>>>` 运算符，但 C++ 主要看数据类型。
         
 
+#### (6) 异或(^)
+
+- **逻辑**：对照各个二进位，不同为1，相同为0（与或|区分开）
+
+- **性质**：
+	- **交换律**：`A ^ B = B ^ A`
+	- **结合律**：`A ^ B ^ C = A ^ (B ^ C)`
 ---
 
 ### 3. 算法题中的“骚操作”总结
@@ -672,3 +696,16 @@ set<int> S(nums.begin(), nums.end());
 |                |                                                                                           |                                                    |
 - **概念：** C++ 有一个规则叫 **名字隐藏 (Name Hiding)**。如果派生类声明了一个与基类同名的函数（参数不同），基类的所有同名函数在派生类中都会被隐藏，导致无法直接调用。
 - **一句话建议：** 在现代 C++ 开发中，尽量使用 using 替代 typedef；在头文件中严禁使用 using namespace；在继承体系中利用 using 来解决重载和构造函数繁琐的问题。
+
+
+## String 
+数字转string：to_string(int num);
+数量：S.size()
+拼接：S += string s
+是否为空：S.empty()
+访问字符：S\[i] 或者 S.at(i)
+截取子串（pos 起始位置，len 长度）：S.substr(pos, len)
+==类似Vector==
+![](图片/C++/C++语言基础/IMG-20260315162936936.png)![](图片/C++/C++语言基础/IMG-20260315162945669.png)
+统计：count(s.begin(), s.end(), c); 或者 s.find("sub")
+

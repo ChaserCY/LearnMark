@@ -195,4 +195,5 @@ GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Blue, FString::Printf(TEXT("Cam
 
 
 
-
+### 3.1 创建Inputmapping Content 和 Input Action
+![](图片/UE/U++/UEC++/IMG-20260307202320353.png)

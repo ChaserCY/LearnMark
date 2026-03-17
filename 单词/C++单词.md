@@ -33,7 +33,7 @@ Rescan                 重新扫描
 Collaborators       协作者
 Equippable(额亏婆波)           可装备的
 Fragment            片段
-generated
+generated           生成
 GENERATED         生成
 Pivot                    转轴
 Grid                     网格
@@ -47,3 +47,15 @@ SetAttachment    设置附件
 CreateDefaultSubobject         创建默认子对象
 Permory              主要的
 TargetArmLength          目标臂长
+Widget               (功能)部件
+Slot                    插槽，信息
+Escape(Esc按键)    退出
+font                          字体
+Appearance            外观，外表
+Default               默认
+Flip                     翻转
+Flop                     失败
+precision            精度
+scope                 范围
+Slate                    石板
+Conflict            冲突
