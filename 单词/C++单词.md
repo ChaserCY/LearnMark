@@ -59,3 +59,6 @@ precision            精度
 scope                 范围
 Slate                    石板
 Conflict            冲突
+Padding            填充
+Authority            权威
+Remote              遥控器
