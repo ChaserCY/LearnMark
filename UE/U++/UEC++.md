@@ -2,7 +2,7 @@
 设置'Asset Editor Open Location'为'Main Window' 修改新弹出窗口的出现位置
 Ctrl + Shfit +W  修改编辑器视角大小
 修改.h头文件中的原始指针
-
+Compile：关闭实时代码编写
 ## 代码结构
 ### 头文件和源文件
 **头文件 (.h)** 和 **源文件 (.cpp)** 这种设计是 **C++ 语言的特性**，但虚幻引擎（UE）利用这种特性构建了它强大的 **“反射系统”（Reflection System）**，也就是让 C++ 代码能和编辑器（蓝图）交互的核心机制。
@@ -10,6 +10,9 @@ Ctrl + Shfit +W  修改编辑器视角大小
 	只列出名字和属性，**不包含具体做法**
 - .cpp 文件（源文件） = 后厨的厨师
 	**干实事的地方**，这里写具体的逻辑（if/else, for循环等）
+
+### 修改C++类文件位置
+直接在编辑器中移动，对应的.h .cpp文件，且必须修改.cpp文件中的#include 引用头文件的地址
 
 ### 源文件中的内容格式(::)
 :: 在 C++ 中叫做 **作用域解析运算符**
@@ -114,7 +117,7 @@ ___生成：增量编译，，，重新生成：全部清理+生成___
 1.这个属性和变量声明在.h文件中，并且括号内可以无序无数量限制，用，来继续添加属性
 2.里面的public，private的作用范围是遇到下一个==访问控制说明符==为止
 3.一对一标记
-4.Meta作用：让私有的成员，蓝图也可以访问（节点访问，正常只能在细节栏中访问），也就是UE生成中间对象
+4.Meta作用：主要用于控制编辑器（Editor）界面的显示效果和交互行为
 例如：
 ![](图片/UE/U++/UEC++/IMG-20260301171708945.png)
 
@@ -141,6 +144,66 @@ BP_函数名  和 函数名  两种节点
 	- **图标**：通常是一个菱形 ◇ 或者是带有箭头的图标（取决于具体是 Event 还是函数重载）。
 	- **策划/美术（或者作为蓝图开发者的你）在蓝图里写**
 ![](图片/UE/U++/UEC++/IMG-20260301171709057.png)
+
+#### Meta参数的作用 
+控制编辑器界面的 UI 展示
+这是 meta 最常见的用途。它可以让变量在编辑器面板中看起来更专业、更易用。
+DisplayName: 修改变量在编辑器中显示的名称，而不改变代码中的变量名。
+```cpp
+UPROPERTY(EditAnywhere, meta = (DisplayName = "Movement Speed"))
+float MyInternalVariable; // 在编辑器里显示为 "Movement Speed"
+```
+ToolTip: 自定义鼠标悬停时的提示（虽然注释也会自动转为提示，但 meta 可以覆盖它）。
+Category: 虽然可以写在宏的第一级，但在 meta 中也可以细化分类。
+
+2. 数值限制与约束
+在编辑器中输入数值时，meta 可以防止策划输入非法数值。
+ClampMin / ClampMax: 限制在编辑器中输入的数值范围。
+UIMin / UIMax: 限制滑动条（Slider）的范围，但手动输入可以超过这个值。
+```cpp
+UPROPERTY(EditAnywhere, meta = (UIMin = "0", UIMax = "100", ClampMin = "0"))
+float Health;
+
+```
+
+3. 增强 Blueprint（蓝图）的功能
+有些 meta 标签直接改变了蓝图节点的呈现方式。
+BlueprintThreadSafe: 标记函数为线程安全，常用于动画蓝图。
+WorldContext: 标记哪个参数是世界上下文（通常在静态函数库中使用，会自动隐藏该输入引脚）。
+DeterminesOutputType: 根据输入参数的类型自动决定输出引脚的类型（常用于 GetActorOfClass 这种泛型操作）。
+```cpp
+UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "Class"))
+UObject* SpawnSomething(TSubclassOf<UObject> Class);
+
+```
+
+4. 逻辑控制与可见性
+AllowPrivateAccess: 允许在蓝图中访问类的 private 变量。
+```cpp
+private:
+    UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
+    class USphereComponent* SphereComponent;
+
+```
+
+EditCondition: 只有当某个布尔值为真时，该属性才在编辑器中可编辑。
+
+```cpp
+UPROPERTY(EditAnywhere)
+bool bEnableSpeed;
+
+UPROPERTY(EditAnywhere, meta = (EditCondition = "bEnableSpeed"))
+float Speed; // 只有勾选了 bEnableSpeed，这里才能改
+
+```
+
+5. 资源筛选
+AllowedClasses: 限制 FSoftObjectPath 或 UObject* 只能选择特定的类。
+```cpp
+UPROPERTY(EditAnywhere, meta = (AllowedClasses = "Texture2D, StaticMesh"))
+FSoftObjectPath AssetLink;
+
+```
 
 ### 2.3\#include 引入头文件与不完全声明
 #### 前置声明

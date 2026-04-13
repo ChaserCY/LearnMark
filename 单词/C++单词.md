@@ -62,3 +62,5 @@ Conflict            冲突
 Padding            填充
 Authority            权威
 Remote              遥控器
+Performance       性能
+Total                总计
