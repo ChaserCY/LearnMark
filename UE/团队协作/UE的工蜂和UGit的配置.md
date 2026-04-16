@@ -4,7 +4,7 @@
 
 蓝图对比：需要在设置-工具-添加差异工具
 ![[图片/UE/团队协作/UE的工蜂和UGit的配置/IMG-20260301171719342.png]]
-
+K：\Epic Games\UE_5.6\Engine\Binaries\Win64 UnrealEditor.exe
 ![[图片/UE/团队协作/UE的工蜂和UGit的配置/IMG-20260301171719368.png]]
 
 

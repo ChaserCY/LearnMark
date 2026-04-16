@@ -64,8 +64,43 @@ Soft：
 
 ## 3-3. 创建打印日志相关函数
 - 创建头文件.h
-	- 右键public
+	- 右键public文件夹
 	- 位置选择在这个public下
+- 文件内容
+	- 命名空间+静态函数
+	- ![](图片/UE/U++/GAS_/IMG-20260414173301605.png)
 - 其他cpp文件调用
 	- 包含这个头文件（#include）
-	- 
+	- <命名空间>.<静态函数名>来调用
+- 头文件#pragma
+	- \#pragma once    同一编译单元即使被#include 多次，也只处理一次，避免重复定义，重复预处理
+	- \#pragma region <片段名>------#pragma endregion  代码分组，可折叠，它是编译器，IDE指令
+
+
+## 3.4 挂载摄像机组件
+
+### 角色蓝图初始化
+```cpp
+
+```
+### 头文件（角色蓝图）
+- 相关组件前向声明
+	- class USpringArmComponent;
+	- class UCameraComponent;
+- 反射命名组件指针
+	- USpringArmComponen*
+	- UCameraComponent*
+
+### cpp文件（角色蓝图）
+- 创建初始化组件
+	- CameraBoom\===CreateDefaultSubobject==<USpringArmComponent(TEXT("CameraBoom"));
+- 设置挂接点，长度，方向等等属性
+	- CameraBoom = CreateDefaultSubobject\<USpringArmComponent>(TEXT("CameraBoom"));  
+	- CameraBoom->SetupAttachment(GetRootComponent());  
+	- CameraBoom->TargetArmLength = 200.0f;  
+	- CameraBoom->SocketOffset = FVector(0.0f, 55.f, 65.f);  
+	- CameraBoom->bUsePawnControlRotation = true;//是否跟随pawn的ControlRotation
+
+
+## 3.5 GameplayTags
+![](../../Pasted%20image%2020260414211530.png)

@@ -64,3 +64,5 @@ Authority            权威
 Remote              遥控器
 Performance       性能
 Total                总计
+Query              疑问，问号
+Chord               和弦，组合
