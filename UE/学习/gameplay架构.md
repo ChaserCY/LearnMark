@@ -43,7 +43,8 @@
     - **同步的数据：** 所有玩家都能看到的数据，比如“剩余时间”、“当前比分”、“当前是第几波敌人”。
         
     - 例子： Get Game State -> Cast to BP_MyGameState -> Get TimeRemaining (获取倒计时显示在 UI 上)。
-        
+
+![](图片/UE/学习/gameplay架构/IMG-20260514172358027.png)
 
 ---
 

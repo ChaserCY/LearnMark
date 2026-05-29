@@ -55,6 +55,19 @@ Q.pop_back( )            //删除最后一个元素
 	-并且不会影响下一次读取，只是偷窥下一个==字符==
 - cin>>string s;  //默认以空格，换行，制表符为间隔
 
+## 优先队列，大根堆，小根堆
+应用场景：==找最值、维护前 K 大 / 小元素、贪心选择==
+调用容器：**priority_queue\<Node> pq;**==**默认大根堆**==
+使用结构体重构小根堆：使用{}来快速组成元素
+```cpp
+struct Node{
+    ll val;
+    int i,j,k;
+    bool operator<(const Node &other)const{ //改小根堆，重构小于符号
+        return val>other.val;
+    }
+};
+```
 
 ## queue容器
 **queue容器不支持find操作和迭代器**
