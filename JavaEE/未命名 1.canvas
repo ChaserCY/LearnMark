@@ -1,0 +1,25 @@
+{
+	"nodes":[
+		{"id":"266911398592cb53","x":-200,"y":-300,"width":250,"height":60,"type":"text","text":"Web(网站)"},
+		{"id":"f12d83ad429cce5e","x":-300,"y":-40,"width":340,"height":80,"type":"text","text":"前端(Html,css,javascript,vue3)"},
+		{"id":"fdd26b9dc47550a5","x":220,"y":-40,"width":250,"height":60,"type":"text","text":"后端(公司服务器)"},
+		{"id":"baa5f89779f56516","x":640,"y":-40,"width":250,"height":60,"type":"text","text":"数据库(MySQL,SQLService)"},
+		{"id":"434844dc785a4253","x":120,"y":-420,"width":250,"height":60,"type":"text","text":"客户端"},
+		{"id":"bede784880747b08","x":120,"y":-540,"width":250,"height":60,"type":"text","text":"python，C++"},
+		{"id":"0e7ed92e4b6f63f5","x":-450,"y":80,"width":250,"height":60,"type":"text","text":"样式"},
+		{"id":"83899a13ed307a9f","x":-220,"y":440,"width":250,"height":50,"type":"text","text":"查询账号数据"},
+		{"id":"8dd7197884eb620a","x":-600,"y":440,"width":250,"height":50,"type":"text","text":"游戏客户端"},
+		{"id":"8921f13a4aad9831","x":220,"y":-100,"width":250,"height":60,"type":"text","text":"Java springboot\npython"},
+		{"id":"601100f3f13a517d","x":220,"y":220,"width":250,"height":60,"type":"text","text":"全栈"}
+	],
+	"edges":[
+		{"id":"8641be1caae107c9","fromNode":"f12d83ad429cce5e","fromSide":"top","toNode":"fdd26b9dc47550a5","toSide":"top","color":"1"},
+		{"id":"f52d9d63c80a1b1e","fromNode":"fdd26b9dc47550a5","fromSide":"bottom","toNode":"f12d83ad429cce5e","toSide":"bottom","color":"1","label":"数据传输途径：接口"},
+		{"id":"a2d4065f938aece1","fromNode":"fdd26b9dc47550a5","fromSide":"right","toNode":"baa5f89779f56516","toSide":"left","label":"查询"},
+		{"id":"59d3c7430fcea9ac","fromNode":"baa5f89779f56516","fromSide":"bottom","toNode":"fdd26b9dc47550a5","toSide":"bottom","color":"3"},
+		{"id":"2ef006e805d65e16","fromNode":"fdd26b9dc47550a5","fromSide":"top","toNode":"baa5f89779f56516","toSide":"top","label":"插入数据"},
+		{"id":"a476a09d09f72a27","fromNode":"8dd7197884eb620a","fromSide":"right","toNode":"83899a13ed307a9f","toSide":"left"},
+		{"id":"666d6645b0d1875f","fromNode":"83899a13ed307a9f","fromSide":"bottom","toNode":"8dd7197884eb620a","toSide":"bottom"},
+		{"id":"c09ee7d62328fb4e","fromNode":"266911398592cb53","fromSide":"bottom","toNode":"f12d83ad429cce5e","toSide":"top"}
+	]
+}

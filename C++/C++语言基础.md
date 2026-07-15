@@ -34,8 +34,20 @@ Q.pop_back( )            //删除最后一个元素
 
 另外：迭代器之间不能相加，只能相减来得出距离，相加得换成int和迭代器来加（算偏移）
 
+## 定义模板函数(模板类相似)
+```cpp
+template<class T,typename N,...>  // class=typename
+T max(T a,T b){
+return a>b?a:b;
+}
 
+//调用
+max(a,b);          //类型不同会报错
+max<int>(a,b);     //会隐式转换类型
 
+```
+- 调用时，通过调用函数来实例化模板函数(调用时，确定了T，就生成对应函数)，==隐式实例化==
+- 可重载，不同模板下的相同返回值，名字的函数
 ## 迭代器定义
 - 迭代器（Iterator）是 C++ 中一种**抽象的 “遍历工具”**，本质上是一个**行为类似指针的对象**（或指针本身），用于**按顺序访问容器（如 vector、list、map 等）中的元素**，而无需暴露容器的内部存储结构。
 - 迭代器可以是==**指针**==（比如 vector 的迭代器本质就是指向数组元素的指针），也可以是**自定义类对象**（比如 list 的迭代器，内部封装了链表节点的指针，通过重载`++`、`*`等运算符模拟指针行为）。
@@ -63,7 +75,11 @@ Q.pop_back( )            //删除最后一个元素
 struct Node{
     ll val;
     int i,j,k;
+<mark class="conflict ours">
+    bool operator<(const Node &other)const{
+</mark><mark class="conflict theirs">
     bool operator<(const Node &other)const{ //改小根堆，重构小于符号
+</mark>
         return val>other.val;
     }
 };

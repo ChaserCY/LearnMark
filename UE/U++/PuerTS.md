@@ -109,3 +109,40 @@ Promise / async
     - 代理蓝图启动，空函数会被重定向到ts（准确来说是ts编译后的js），对于ue引擎来说，代理蓝图就是普通蓝图，并无特殊性；
         
     - 由于（代理）蓝图由ue引擎实例化，其构建就关联到某个虚拟机上的js逻辑，并需要执行构造逻辑，于是该功能需要启动一个默认的puerts::FJsEnv，这个puerts::FJsEnv和你new的puerts::FJsEnv实例没有区别，也有蓝图mixin功能，而且根据第一条，和其它地方new的puerts::FJsEnv是相互隔离的。
+
+
+# Puerts文件模板缘由
+ 这是一个非常典型且必要的 PuerTS 模式，核心原因在于编译时类型安全和运行时连接是两个独立的问题，需要分开解决。                                                                                                              
+  为什么需要这个接口                                                                                                                   
+  1. 蓝图是运行时构造，TypeScript 编译时看不到它                                                                                                                                                                          
+  蓝图（.uasset）是 Unreal 编辑器里的可视化资产，在 TypeScript 编译时根本不存在。当你写 this.AbilitySystemComponent 时，TypeScript 编译器不知道这个东西是什么——除非你有类型声明。   
+  
+  2. 接口的作用：提供编译时类型信息                                                                                                                                                                                              
+
+  // 这个接口继承了 PuerTS 自动生成的蓝图类型定义
+  export interface BP_BaseCharacter extends UE.Game.BluePrints.Character.BP_BaseCharacter.BP_BaseCharacter_C {}
+
+  BP_BaseCharacter_C 是 PuerTS 从蓝图资产自动生成的 TypeScript 类型声明，里面包含了蓝图里定义的所有属性（如 AbilitySystemComponent）、委托（如 HPChanged）、函数等。你的空接口继承了它，就把这些类型信息带进来了。
+
+  然后类声明 implements BP_BaseCharacter 之后，TypeScript 编译器就知道 this.AbilitySystemComponent、this.HPChanged.Add(...) 这些是合法成员，不会报红。
+
+  3. @mixin 装饰器的作用：提供运行时连接
+
+  @mixin(AssetPath)
+  export class BP_BaseCharacter implements BP_BaseCharacter { ... }
+
+  @mixin 在运行时做三件事：
+  - 通过路径加载实际的蓝图类
+  - 用 blueprint.tojs() 把它转成 JS 可调用形式
+  - 用 blueprint.mixin() 把你写的 TypeScript 类方法合并到蓝图对象上
+
+  总结：两个独立问题，两个独立解法┌───────────────────────────────────────┬─────────────────────────────────────────────────────┬────────┐
+  │                 问题                  │                        解法                         │  时机  │
+  ├───────────────────────────────────────┼─────────────────────────────────────────────────────┼────────┤
+  │ TypeScript 编译器不认识蓝图里的成员   │ interface BP_BaseCharacter extends ... + implements │ 编译时 │
+  ├───────────────────────────────────────┼─────────────────────────────────────────────────────┼────────┤
+  │ TypeScript 代码需要实际连接到蓝图对象 │ @mixin(AssetPath) 装饰器                            │ 运行时 │
+  └───────────────────────────────────────┴─────────────────────────────────────────────────────┴────────┘
+
+  两者缺一不可——没有接口，编译报红；没有 @mixin，代码能编译通过但运行时根本不生效。
+

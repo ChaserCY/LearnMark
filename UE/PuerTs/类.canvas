@@ -1,0 +1,24 @@
+{
+	"nodes":[
+		{"id":"4ff0bdc1cf3496ad","x":-520,"y":-180,"width":250,"height":60,"type":"text","text":"BaseAttributeSet类"},
+		{"id":"dbe9cd231481b3b6","x":-520,"y":-320,"width":250,"height":60,"type":"text","text":"UAttributeSet"},
+		{"id":"885d698346a1a223","x":-880,"y":140,"width":442,"height":240,"type":"text","text":"定义了“属性”\nFGameplayAttributeData    AND   Set，Get函数\nHP，MaxHP\nMP，MaxMP\nSP，MaxSP\n\nvirtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;//自带重写语句，用于在==属性变化时==触发\n"},
+		{"id":"3028bdcab194377e","x":-699,"y":0,"width":80,"height":60,"type":"text","text":".h"},
+		{"id":"e6fa3063f9a61ddd","x":-345,"y":140,"width":405,"height":220,"type":"text","text":"PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)\n函数实现：\n判断变化的Data属于哪种属性，然后用Set+FMath::Clamp限制变化后的值"},
+		{"id":"8223a9ce61390009","type":"text","text":".cpp","x":-182,"y":0,"width":80,"height":60},
+		{"id":"f9231e7bcde2329c","type":"text","text":"UGameplayAbility","x":760,"y":-340,"width":250,"height":50},
+		{"id":"9891cd579fc1dbbf","type":"text","text":".h","x":606,"y":-28,"width":80,"height":60},
+		{"id":"0d599a498fbc0419","type":"text","text":".cpp","x":1123,"y":-28,"width":80,"height":60},
+		{"id":"4ed025202f5081ac","type":"text","text":"BaseGameplayAbility类","x":760,"y":-200,"width":250,"height":60}
+	],
+	"edges":[
+		{"id":"c73db3138dae7c7e","fromNode":"dbe9cd231481b3b6","fromSide":"bottom","toNode":"4ff0bdc1cf3496ad","toSide":"top","color":"1","label":"继承自"},
+		{"id":"d7509c3caf21c69e","fromNode":"f9231e7bcde2329c","fromSide":"bottom","toNode":"4ed025202f5081ac","toSide":"top","color":"1","label":"继承自"},
+		{"id":"87d54cb6ca7d333c","fromNode":"4ff0bdc1cf3496ad","fromSide":"bottom","toNode":"3028bdcab194377e","toSide":"top"},
+		{"id":"eac14febeb071822","fromNode":"4ff0bdc1cf3496ad","fromSide":"bottom","toNode":"8223a9ce61390009","toSide":"top"},
+		{"id":"577030673c186cbd","fromNode":"3028bdcab194377e","fromSide":"bottom","toNode":"885d698346a1a223","toSide":"top"},
+		{"id":"25b6d435b838ac93","fromNode":"8223a9ce61390009","fromSide":"bottom","toNode":"e6fa3063f9a61ddd","toSide":"top"},
+		{"id":"3071b93274f18ada","fromNode":"4ed025202f5081ac","fromSide":"bottom","toNode":"9891cd579fc1dbbf","toSide":"top"},
+		{"id":"a623182a1138f373","fromNode":"4ed025202f5081ac","fromSide":"bottom","toNode":"0d599a498fbc0419","toSide":"top"}
+	]
+}

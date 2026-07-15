@@ -1,0 +1,2 @@
+- 1. 使用CCSwitch工具进行Api的配置
+- 2. 命令行中输入**claude**启动CLI窗口

@@ -69,3 +69,16 @@ Chord               和弦，组合
 Format           格式
 React              反应，受击
 declare_dynamic_delegate_twoparams   声明双参数动态委托
+Effect           影响
+Execute        执行
+Evaluated     评估
+Callback       回应，回调
+ACCESSORS    访问
+Modifiers       修饰符
+DECLARE(Declare)       宣告
+DEFINE(Define)           定义
+Native           原生的
+Config          配置
+Acceleration  加速度
+Duration       持续时间
+Activate        启动，激活

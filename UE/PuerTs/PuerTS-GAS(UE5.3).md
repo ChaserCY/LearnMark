@@ -9,7 +9,11 @@
 - 在编辑器-插件，启用GAS ,GASAttachEditor插件，编辑器偏好-源代码-启用Rider Uproject打开
 
 
-# 项目初始化
+# 1.项目初始化
+## 开启插件调试窗口
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260616214238879.png)
+cmd控制台输入：GASAttachEditorShow 可以打开窗口
+
 ## 新建C++类继承Gamemode
 ==一定要在项目设置中添加游戏实例==
 ### GAS_GameInstance.h
@@ -284,7 +288,7 @@ Fun3是TS文件中命名的事件(需要使用时调用)
 
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202218127.png)
 
-# 基础角色与相机控制
+# 2.基础角色与相机控制
 ## 1. 创建基础角色蓝图，创建子类(Player,Enemy)，创建输入动作，输入操作映射
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529150604003.png)
 另外还需要创建蓝图==玩家控制器==
@@ -400,3 +404,1033 @@ ReceiveBeginPlay(){
 ## 6. 限制相机角度
 UE.GameplayStatics.GetPlayerCameraManager(this,0).ViewPitchMin = -65;  
 UE.GameplayStatics.GetPlayerCameraManager(this,0).ViewPitchMax = 25;
+
+## 7. 其他
+总结就是：@mixin 类中，不要依赖 field = value 这种初始化语法。这是因为 Puerts 的 @mixin 装饰器在混入类时，ES6 类字段初始化语法（= 赋值）的执行时机和标准 JS 不同——mixin
+  过程中这些初始化的赋值操作可能被跳过，字段没有被真正挂到 UE 对象上。
+  应该要么：
+
+  1. 纯声明 + 懒初始化（当前方案）：
+  Move_Rotator: UE.Rotator;
+  // 在使用处：
+  if (!this.Move_Rotator) this.Move_Rotator = new UE.Rotator(0,0,0);
+
+  2. 在 ReceiveBeginPlay 中初始化（对 Move_Rotator 也可行）：
+  Move_Rotator: UE.Rotator;
+
+  ReceiveBeginPlay() {
+      this.Move_Rotator = new UE.Rotator(0, 0, 0);
+      // ...
+  }
+
+  当前懒初始化的方式最安全，因为它一定在 UE 完全就绪后才创建对象。
+
+
+
+# 3.基础的动画以及基础属性添加
+- 创建对应的动画蓝图并设置
+- 创建基础属性集
+- Character基础属性监听
+## 1.新建BaseAttributeSet类，通过在Rider中直接创建.h,.cpp文件
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608171303619.png)
+- BaseAttributeSet.h,声明一些基础属性值
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "AttributeSet.h"  
+#include "AbilitySystemComponent.h"  
+#include "BaseAttributeSet.generated.h"  
+  
+//标准属性宏,这些宏可以提供一些常用的函数  
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \  
+    GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \  
+    GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \  
+    GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \  
+    GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)  
+  
+  
+/**  
+ * 基础属性集  
+ */UCLASS()  
+class PTGAS_API UBaseAttributeSet : public UAttributeSet  
+{  
+    GENERATED_BODY()  
+    public:  
+    //生命值  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData HP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, HP)  
+    //这里提供了HP的Get,Set,Init的函数  
+    //最大生命值  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData MaxHP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxHP)  
+    //魔法值  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData MP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MP)  
+    //最大魔法值  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData MaxMP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxMP)  
+    //能量  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData SP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, SP)  
+  
+    //最大能量  
+    UPROPERTY(BlueprintReadOnly, Category="AttributeSet")  
+    FGameplayAttributeData MaxSP;  
+    ATTRIBUTE_ACCESSORS(UBaseAttributeSet, MaxSP)  
+    virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;  
+    //GAS框架提供的虚函数重写，GameplayEffect修改后自动调用  
+    };
+```
+- .cpp 每次GameplayEffect变化时，进行值的限制
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#include "Abilitys/BaseAttributeSet.h"  
+  
+#include "GameplayEffectExtension.h"  
+  
+void UBaseAttributeSet::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)  
+{  
+    Super::PostGameplayEffectExecute(Data);  
+    if (Data.EvaluatedData.Attribute.GetUProperty()!=nullptr)  
+    {       //获取修改的数据属性名  
+       FString AttributeName = Data.EvaluatedData.Attribute.GetUProperty()->GetName();  
+       //血量限制  
+       if (AttributeName == "HP")  
+       {          SetHP(FMath::Clamp(GetHP(), 0.f, GetMaxHP()));  
+       }       //蓝量设置  
+       if (AttributeName == "MP")  
+       {          SetMP(FMath::Clamp(GetMP(),0.f, GetMaxMP()));  
+       }       //限制能量  
+       if (AttributeName == "SP")  
+       {          SetSP(FMath::Clamp(GetSP(), 0.f, GetMaxSP()));  
+       }           }  
+}
+```
+
+## 2. 在BaseCharacter中监听==属性值==的变化
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "Abilitys/BaseAttributeSet.h"  
+#include "GameFramework/Character.h"  
+#include "BaseCharacter.generated.h"  
+  
+struct FOnAttributeChangeData;  
+class UAbilitySystemComponent;  
+  
+//监听属性变化的代理  
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChanged, float, Value);  
+  
+/*  
+ * 基础角色  
+ */  
+  
+UCLASS()  
+class PTGAS_API ABaseCharacter : public ACharacter  
+{  
+    GENERATED_BODY()  
+  
+public:  
+    ABaseCharacter();  
+  
+protected:  
+    virtual void BeginPlay() override;  
+  
+public:   
+    virtual void Tick(float DeltaTime) override;  
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;  
+          
+//技能系统组件(核心组件)  
+protected:  
+    UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="AbilitySystem" )  
+    TObjectPtr<UAbilitySystemComponent>  AbilitySystemComponent;  
+    //监听血量变化  
+    UPROPERTY(BlueprintAssignable, Category="AbbilitySystem")  
+    FOnAttributeChanged HPChanged;  
+    void OnHPAttributeChanged(const FOnAttributeChangeData& Data);  
+    //监听血量变化  
+    UPROPERTY(BlueprintAssignable, Category="AbbilitySystem")  
+    FOnAttributeChanged MPChanged;  
+    void OnMPAttributeChanged(const FOnAttributeChangeData& Data);  
+    //监听血量变化  
+    UPROPERTY(BlueprintAssignable, Category="AbbilitySystem")  
+    FOnAttributeChanged SPChanged;  
+    void OnSPAttributeChanged(const FOnAttributeChangeData& Data);  
+    };
+```
+- .cpp 
+```cpp
+  
+#include "Character/BaseCharacter.h"  
+#include "Character/BaseCharacter.h"  
+  
+#include "AbilitySystemComponent.h"  
+  
+  
+ABaseCharacter::ABaseCharacter()  
+{  
+    PrimaryActorTick.bCanEverTick = true;  
+    AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));  
+  
+}  
+  
+void ABaseCharacter::BeginPlay()  
+{  
+    Super::BeginPlay();  
+    }  
+  
+void ABaseCharacter::Tick(float DeltaTime)  
+{  
+    Super::Tick(DeltaTime);  
+  
+}  
+  
+void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)  
+{  
+    Super::SetupPlayerInputComponent(PlayerInputComponent);  
+    if (AbilitySystemComponent)  
+    {       //监听属性变化  
+       AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UBaseAttributeSet::GetHPAttribute()).AddUObject(this, &ABaseCharacter::OnHPAttributeChanged);  
+       AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UBaseAttributeSet::GetMPAttribute()).AddUObject(this, &ABaseCharacter::OnMPAttributeChanged);  
+       AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UBaseAttributeSet::GetSPAttribute()).AddUObject(this, &ABaseCharacter::OnSPAttributeChanged);  
+    }  
+}  
+  
+void ABaseCharacter::OnHPAttributeChanged(const FOnAttributeChangeData& Data)  
+{  
+    //属性值发生变化  
+    if (Data.OldValue!=Data.NewValue)  
+    {       HPChanged.Broadcast(Data.NewValue);  
+    }    }  
+  
+void ABaseCharacter::OnMPAttributeChanged(const FOnAttributeChangeData& Data)  
+{  
+    //属性值发生变化  
+    if (Data.OldValue!=Data.NewValue)  
+    {       MPChanged.Broadcast(Data.NewValue);  
+    }          
+}  
+  
+void ABaseCharacter::OnSPAttributeChanged(const FOnAttributeChangeData& Data)  
+{  
+    //属性值发生变化  
+    if (Data.OldValue!=Data.NewValue)  
+    {       SPChanged.Broadcast(Data.NewValue);  
+    }}
+```
+
+## 3. 在编辑器中绑定与调用测试
+- 创建数据表格
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170813175.png)
+
+- 添加对应属性的信息
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170859908.png)
+
+- 绑定属性集的类与属性的数据表格
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170948294.png)
+
+- 测试：从组件中取出对应属性值
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608171025225.png)
+
+# 4. 制作GA(技能)
+- 创建继承自UGameplayAbility类的类
+- 编辑器中创建GameplayAbility类的蓝图(继承上面)
+
+## 1. 以UGameplayAbility创建类
+- .h (创建了技能消耗枚举+技能信息结构，获取技能信息函数(UI)，获取技能能否使用状态(逻辑))
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "Abilities/GameplayAbility.h"  
+#include "BaseGameplayAbility.generated.h"  
+  
+//技能消耗类型  
+UENUM(BlueprintType)  
+enum  ECostType:uint8  
+{  
+    //血量  
+    ECT_HP UMETA(DisplayName="HP"),  
+    //魔法值  
+    ECT_MP UMETA(DisplayName="MP"),  
+    //能量  
+    ECT_SP UMETA(DisplayName="SP"),  
+};  
+  
+//游戏技能信息  
+USTRUCT(BlueprintType)  
+struct FGameplayAbilityInfo  
+{  
+    GENERATED_BODY()  
+public:  
+    //技能类  
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Category="AbilityInfo")  
+    TSubclassOf<class UBaseGameplayAbility> AbilityClass;  
+    //技能图标  
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="AbilityInfo")  
+    UMaterialInstance* IconMaterial;  
+    //技能CD  
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="AbilityInfo")  
+    float CD;  
+    //技能消耗类型  
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="AbilityInfo")  
+    TEnumAsByte<ECostType> CostType;  
+    //TEnumAsByte 限制<>内枚举类型的值为uint8,节省内存  
+  
+    //技能消耗值  
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="AbilityInfo")  
+    float CostValue;  
+    //无参构造函数  
+    FGameplayAbilityInfo()  
+    {       AbilityClass = nullptr;  
+       IconMaterial = nullptr;  
+       CD = 0.f;  
+       CostType = ECostType::ECT_HP;  
+       CostValue = 0.f;  
+    }    /** 有参数构造  
+     ** @param AbilityClass 技能类  
+     * @param IconMaterial 技能图标  
+     * @param CD 技能CD  
+     * @param CostType 技能消耗类型  
+     * @param CostValue 技能消耗值  
+     *     */  
+    FGameplayAbilityInfo(  
+    TSubclassOf<class UBaseGameplayAbility> AbilityClass,  
+    UMaterialInstance* IconMaterial,  
+    float CD,  
+    TEnumAsByte<ECostType> CostType,  
+    float CostValue  
+    )    {       this->AbilityClass = AbilityClass;  
+       this->IconMaterial = IconMaterial;  
+       this->CD = CD;  
+       this->CostType = CostType;  
+       this->CostValue = CostValue;  
+    }          
+};  
+  
+  
+/**  
+ * 游戏技能基类  
+ */UCLASS()  
+class PTGAS_API UBaseGameplayAbility : public UGameplayAbility  
+{  
+    GENERATED_BODY()  
+    public:  
+    //技能图标  
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="AbilityInfo")  
+    UMaterialInstance* IconMaterial;  
+    //获取技能信息  
+    UFUNCTION(BlueprintCallable, Category="AbilityInfo")  
+    FGameplayAbilityInfo GetAbilityInfo(const int Level = 0) const;  
+    //判断技能消耗是否满足  
+    UFUNCTION(BlueprintCallable, Category="AbilityInfo")  
+    bool IsSatisfyCost() const;  
+    //  
+    };
+```
+
+- .cpp(对两个函数的实现，获取当前GameEffect的信息，判断对应技能消耗的属性值是否能支持这个技能的释放)
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+  
+#include "Abilitys/BaseGameplayAbility.h"  
+#include "AbilitySystemblueprintLibrary.h"  
+#include "AbilitySystemComponent.h"  
+#include "Abilitys/BaseAttributeSet.h"  
+  
+  
+FGameplayAbilityInfo UBaseGameplayAbility::GetAbilityInfo(const int Level)const  
+{  
+    //获取冷却和消耗的GameplayEffect  
+    const UGameplayEffect* CDEffect = GetCooldownGameplayEffect();  
+    const UGameplayEffect* CostEffect = GetCostGameplayEffect();  
+    //技能消耗类型  
+    ECostType CostType = ECT_HP;  
+    if (CDEffect && CostEffect)  
+    {       //获取技能CD  
+       float CDValue = 0.f;  
+              CDEffect->DurationMagnitude.GetStaticMagnitudeIfPossible(Level, CDValue);  
+       if (CostEffect->Modifiers.Num() > 0)  
+       {          //获取技能的消耗  
+                   float CostValue = 0.f;  
+                   FGameplayModifierInfo CostEffectModifierInfo = CostEffect->Modifiers[0];  
+                   CostEffectModifierInfo.ModifierMagnitude.GetStaticMagnitudeIfPossible(Level, CostValue);  
+                   const FString CostTypeName = CostEffectModifierInfo.Attribute.AttributeName;  
+                   if (CostTypeName == "HP")  
+                   {                      CostType = ECT_HP;  
+                   }                   else if (CostTypeName == "MP")  
+                   {                      CostType = ECT_MP;  
+                   }                   else if (CostTypeName == "SP")  
+                   {                      CostType = ECT_SP;  
+                   }          return FGameplayAbilityInfo(GetClass(), IconMaterial, CDValue, CostType, CostValue);  
+       }       return FGameplayAbilityInfo(GetClass(), IconMaterial, CDValue, CostType, 0.f);  
+    }    return FGameplayAbilityInfo();  
+}  
+  
+//判断技能消耗是否满足  
+bool UBaseGameplayAbility::IsSatisfyCost() const  
+{  
+    if (UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActorFromActorInfo()))  
+    {       const FGameplayAbilityInfo AbilityInfo = GetAbilityInfo(0);  
+       float Value = 0.f;  
+       bool bResult = false;  
+       switch (AbilityInfo.CostType)  
+       {          case ECT_HP:  
+             Value = UAbilitySystemBlueprintLibrary::GetFloatAttributeFromAbilitySystemComponent(AbilitySystemComponent, UBaseAttributeSet::GetHPAttribute(),bResult);  
+             break;  
+          case ECT_MP:  
+             Value = UAbilitySystemBlueprintLibrary::GetFloatAttributeFromAbilitySystemComponent(AbilitySystemComponent, UBaseAttributeSet::GetMPAttribute(),bResult);  
+             break;  
+          case ECT_SP:  
+             Value = UAbilitySystemBlueprintLibrary::GetFloatAttributeFromAbilitySystemComponent(AbilitySystemComponent, UBaseAttributeSet::GetSPAttribute(),bResult);  
+             break;  
+       default:  
+          break;  
+       }       if (bResult && Value > AbilityInfo.CostValue)  
+       {          return true;  
+       }    }    return false;  
+}
+```
+
+## 2. BaseCharacter中加入获取技能信息函数（新增）
+- .h
+```cpp
+
+//获取技能信息  
+
+UFUNCTION(BlueprintPure, Category="AbilitySystem")  
+FGameplayAbilityInfo GetAbilityInfo(const TSubclassOf<UBaseGameplayAbility> AbilityClass, const int Lecel = 0)const;
+
+```
+
+- .cpp
+```cpp
+//获取技能信息  
+FGameplayAbilityInfo ABaseCharacter::GetAbilityInfo(const TSubclassOf<UBaseGameplayAbility> AbilityClass,  
+    const int Lecel) const  
+{  
+    if (const UBaseGameplayAbility* Ability = AbilityClass->GetDefaultObject<UBaseGameplayAbility>();AbilitySystemComponent)  
+    {       return Ability->GetAbilityInfo(Lecel);  
+    }    return FGameplayAbilityInfo();  
+}
+```
+
+# 5. GAS技能相关制作
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260616211913594.png)
+## 1.被动技能制作(恢复)
+- 创建一个继承自BP_GameplayAbility的蓝图
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151441903.png)
+- 创建新的Cost Gameplay Effect Class的蓝图类
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151551968.png)
+- 新建的类中
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151748776.png)
+- 设置被动技能带来的属性变化
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151834870.png)
+
+- 新建被动技能的ts文件
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617152009751.png)
+- 添加触发内容
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+  
+  
+const AssetPath = "/Game/BluePrints/Ability/BaseAbility/GA_BaseResponse.GA_BaseResponse_C";  
+  
+export interface GA_BaseResponse extends UE.Game.BluePrints.Ability.BaseAbility.GA_BaseResponse.GA_BaseResponse_C {  
+}  
+  
+@mixin(AssetPath)  
+  
+export class GA_BaseResponse implements GA_BaseResponse {  
+    //这是 GA（Gameplay Ability） 的激活入口函数，对应 C++ 中的 ActivateAbility。  
+    k2_ActivateAbility(){  
+        this.K2_CommitAbilityCost(); //触发编辑器里绑定的那个Cast类(新建的)  
+    }  
+          
+}
+```
+- 在BP_BaseCharacter.ts，引入蓝图文件，
+```ts
+import * as UE from "ue";  
+  
+import mixin from "../../mixin";  
+  
+const AssetPath = "/Game/BluePrints/Character/BP_BaseCharacter.BP_BaseCharacter_C";  
+  
+const GA_BaseResponseClass = UE.Class.Load("/Game/BluePrints/Ability/BaseAbility/GA_BaseResponse.GA_BaseResponse_C");  
+//导入蓝图文件  
+  
+export interface BP_BaseCharacter extends UE.Game.BluePrints.Character.BP_BaseCharacter.BP_BaseCharacter_C{  
+    }  
+  
+@mixin(AssetPath)  
+export class BP_BaseCharacter implements BP_BaseCharacter {  
+    ReceiveBeginPlay(){  
+        this.InitAbility();  
+        this.InitBind();  
+    }    //初始化技能  
+    InitAbility(){  
+        if(GA_BaseResponseClass){  
+            this.AbilitySystemComponent.K2_GiveAbilityAndActivateOnce(GA_BaseResponseClass);  
+            //调用蓝图对象的ASC组件的"GiveAbilityAndActivateOnce"节点  
+        }  
+        //GAS 提供的蓝图节点方法  
+        //     - 给予该角色这个能力(Gameplay类)  
+        //     - 立即激活一次该能力（执行 ActivateAbility 逻辑）  
+        //     - 执行完后移除这个能力（不会保留在能力列表里）  
+        //   - 用途：适用于一次性效果，比如受击反馈、出生特效、被动触发等  
+    }  
+    InitBind(){  
+        this.HPChanged.Add((...args)=> this.HPChangedEvent(...args));  
+        //- this.HPChanged：一个 多播委托（Multicast Delegate），当 HP 变化时触发  
+        //   - .Add(...)：向这个委托注册一个监听函数  
+        //   - (...args) => this.HPChangedEvent(...args)：箭头函数，将所有参数透传给 HPChangedEvent 方法  
+    }  
+    HPChangedEvent(Value:number){  
+        UE.KismetSystemLibrary.PrintString(this, Value.toString(),true,true,UE.LinearColor.Green);  
+        // - 当 HP 变化时被调用，Value 是新的 HP 值  
+        //   - UE.KismetSystemLibrary.PrintString：在屏幕上打印字符串（对应蓝图中的 Print String 节点）  
+        //     - 参数依次是：WorldContext、字符串、是否打印到屏幕、是否打印到日志、颜色  
+    }  
+}
+```
+
+## 2.平A攻击(间隔与动画)
+创建GA----创建GE_CD---创建GE_Danmage----创建表格---创建GA.ts(修改)---创建PlayerController.ts(修改)---BP_BaseCharacter.ts中添加内容----创建蒙太奇动画(添加几段动画序列+对应序号，另外动画蓝图中加入插槽)---融合上下身的动画
+
+### 创建平A的GA与CD的Effect
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260623214348908.png)
+- 绑定GA_Melee
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151243823.png)
+- 改技能CD
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151437555.png)
+
+### 平A随等级变化的csv表
+- 项目目录新建一个文件夹
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151534113.png)
+- 新建.csv 表格
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151816492.png)
+- 新建数据表
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260621215026724.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260621215159469.png)
+
+### 激活技能在“角色蓝图.ts”中
+```ts
+import * as UE from "ue";  
+  
+import mixin from "../../mixin";  
+import {$Nullable} from "puerts";  
+  
+const AssetPath = "/Game/BluePrints/Character/BP_BaseCharacter.BP_BaseCharacter_C";  
+  
+const GA_BaseResponseClass = UE.Class.Load("/Game/BluePrints/Ability/BaseAbility/GA_BaseResponse.GA_BaseResponse_C");  
+//导入蓝图文件  
+  
+const GA_MeleeClass = UE.Class.Load("/Game/BluePrints/Ability/_00Melee/GA_Melee.GA_Melee_C")  
+  
+  
+export interface BP_BaseCharacter extends UE.Game.BluePrints.Character.BP_BaseCharacter.BP_BaseCharacter_C{  
+}  
+  
+@mixin(AssetPath)  
+export class BP_BaseCharacter implements BP_BaseCharacter {  
+    ReceiveBeginPlay(){  
+        this.InitAbility();  
+        this.InitBind();  
+    }    //初始化技能  
+    InitAbility(){  
+        if(GA_BaseResponseClass){  
+            this.AbilitySystemComponent.K2_GiveAbilityAndActivateOnce(GA_BaseResponseClass);  
+            //调用蓝图对象的ASC组件的"GiveAbilityAndActivateOnce"节点  
+        }  
+        //GAS 提供的蓝图节点方法  
+        //     - 给予该角色这个能力(Gameplay类)  
+        //     - 立即激活一次该能力（执行 ActivateAbility 逻辑）  
+        //     - 执行完后移除这个能力（不会保留在能力列表里）  
+        //   - 用途：适用于一次性效果，比如受击反馈、出生特效、被动触发等  
+        if(GA_MeleeClass){  
+            this.AbilitySystemComponent.K2_GiveAbility(GA_MeleeClass);  
+        }            }  
+    //激活技能  
+    ActivateAbility(AbilityTay:UE.GameplayTag){  
+        this.AbilitySystemComponent.TryActivateAbilitiesByTag(this.GetAbilityTag(AbilityTay));  
+            }  
+    //获取技能标签  
+    GetAbilityTag(AbilityTay:UE.GameplayTag):UE.GameplayTagContainer{  
+        return UE.BlueprintGameplayTagLibrary.MakeGameplayTagContainerFromTag(AbilityTay as UE.GameplayTag);  
+    }          
+      
+InitBind(){  
+        this.HPChanged.Add((...args)=> this.HPChangedEvent(...args));  
+        //- this.HPChanged：一个 多播委托（Multicast Delegate），当 HP 变化时触发  
+        //   - .Add(...)：向这个委托注册一个监听函数  
+        //   - (...args) => this.HPChangedEvent(...args)：箭头函数，将所有参数透传给 HPChangedEvent 方法  
+        this.MPChanged.Add((...args)=> this.MPChangedEvent(...args));  
+        this.SPChanged.Add((...args)=> this.SPChangedEvent(...args));  
+        this.DamageBox.OnComponentBeginOverlap.Add((...args)=> this.WeaponOverlop(...args));  
+            }  
+    WeaponOverlop(OverlappedComponent: $Nullable<UE.PrimitiveComponent>, OtherActor: $Nullable<UE.Actor>, OtherComp: $Nullable<UE.PrimitiveComponent>, OtherBodyIndex: number, bFromSweep: boolean, SweepResult: UE.HitResult)  
+    {        if(this == OtherActor) return;  
+        UE.KismetSystemLibrary.PrintString(  
+            this,   
+`${this.GetName()}击中了->${OtherActor.GetName()}`,  
+            true,  
+            true,  
+            UE.LinearColor.Green,  
+            5.0  
+        );  
+            }  
+          
+HPChangedEvent(Value:number){  
+        // UE.KismetSystemLibrary.PrintString(this, Value.toString(),true,true,UE.LinearColor.Green);  
+        // - 当 HP 变化时被调用，Value 是新的 HP 值  
+        //   - UE.KismetSystemLibrary.PrintString：在屏幕上打印字符串（对应蓝图中的 Print String 节点）  
+        //     - 参数依次是：WorldContext、字符串、是否打印到屏幕、是否打印到日志、颜色  
+    }  
+    MPChangedEvent(Value:number){  
+        // UE.KismetSystemLibrary.PrintString(this, Value.toString(),true,true,UE.LinearColor.Green);  
+    }  
+    SPChangedEvent(Value:number){  
+        // UE.KismetSystemLibrary.PrintString(this, Value.toString(),true,true,UE.LinearColor.Green);  
+    }  
+    }
+```
+
+### PlayerController 绑定平A按键，ts中写平A触发逻辑
+- 里面新建一个函数，在ts中重写逻辑
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625153105439.png)
+- ts逻辑，找到controller控制的角色，使用角色的函数激活技能
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+import {BP_BaseCharacter} from "../BP_BaseCharacter";  
+  
+const AssetPath = "/Game/BluePrints/Character/Player/BP_PlayerController.BP_PlayerController_C";  
+  
+const MeleeTag = new UE.GameplayTag("Ability.Melee");  
+  
+export interface BP_PlayerController extends UE.Game.BluePrints.Character.Player.BP_PlayerController.BP_PlayerController_C {  
+}  
+  
+@mixin(AssetPath)  
+export class BP_PlayerController implements BP_PlayerController {  
+    //玩家  
+    BP_Player : BP_BaseCharacter;  
+    ReceiveBeginPlay() {  
+        this.BP_Player = UE.GameplayStatics.GetPlayerCharacter(this,0) as BP_BaseCharacter;  
+    }    //普通攻击(重写编辑器里的同名函数)  
+    Melee(){  
+        if(this.BP_Player){  
+            this.BP_Player.ActivateAbility(MeleeTag);  
+            //对应BP_BaseCharacter.ts里的ActivateAbility方法，传入一个GameplayTag参数  
+        }  
+    }}
+```
+
+### 创建平A的蒙太奇动画，分段，加入GA_Melee.ts逻辑
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625153953100.png)
+- 动画蓝图修改
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625154402162.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625154434980.png)
+- GA_Melee.ts
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+  
+  
+const AssetPath = "/Game/BluePrints/Ability/_00Melee/GA_Melee.GA_Melee_C";  
+const MA_Melee = UE.AnimMontage.Load("/Game/BluePrints/Character/Animations/Montage/MA_Melee.MA_Melee");  
+  
+export interface GA_Melee extends UE.Game.BluePrints.Ability._00Melee.GA_Melee.GA_Melee_C {  
+}  
+  
+ @mixin(AssetPath) //有继承：export class GA_Melee extends xxxx implements GA_Melee { }  
+export class GA_Melee implements GA_Melee {  
+    //当GA触发的时候执行  
+    K2_ActivateAbility() {  
+        console.log("普通攻击生效");  
+        this.K2_CommitAbility();  
+        this.PlayMeleeMontage();  
+    }  
+    //播放普通攻击蒙太奇  
+    private PlayMeleeMontage(){  
+        //加载蒙太奇资源  
+        const StartSection = UE.KismetMathLibrary.RandomInteger(3).toString();  
+        let MeleeMontageTask = UE.AbilityTask_PlayMontageAndWait.CreatePlayMontageAndWaitProxy(  
+            this,  
+            "",  
+            MA_Melee,            1,  
+            StartSection        );        MeleeMontageTask.OnCompleted.Add(()=>this.K2_EndAbility());//完整播放完毕  
+        MeleeMontageTask.OnInterrupted.Add(()=>this.K2_EndAbility());//被其他动画打断  
+        MeleeMontageTask.OnBlendOut.Add(()=>this.K2_EndAbility());//Blend out过渡完成  
+        MeleeMontageTask.OnCancelled.Add(()=>this.K2_EndAbility());//任务被取消  
+        //这上面四个回调都绑定了结束这个任务，无论哪种情况都会结束任务  
+        MeleeMontageTask.ReadyForActivation();  //激活这个任务  
+        }  
+}
+```
+
+
+## 3.平A攻击(伤害)
+改BP_BaseCharacter的碰撞预设----加个Box碰撞箱---调整碰撞预设(只与Pawn重叠)---创建通知类---在蒙太奇挥刀位置加上一对标签（一定与人物蓝图中函数同名）---在Puerts中完成函数的逻辑部分
+
+### 武器碰撞与触发
+### 在角色蓝图中的网格体下添加，一个Box碰撞，绑定在骨骼的对应插槽上
+### 设置碰撞预设(避免没必要的物品触发了碰撞)
+- 角色胶囊体的
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160527976.png)
+- 角色骨骼网格体的
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160557183.png)
+- Box的
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160622621.png)
+
+
+### “角色”ts中写入碰撞触发事件
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625155147052.png)
+
+### 新建继承自AnimNotify的Unreal类(用在蒙太奇通知处，标签起什么名，对应角色蓝图的函数就起什么名，会直接触发对应函数逻辑)
+```cpp
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "Animation/AnimNotifies/AnimNotify.h"  
+#include "LfAnimNotify_Script.generated.h"  
+  
+/**  
+ * 动画脚本通知(用于动画直接调用函数，无参的)  
+ */UCLASS()  
+class PTGAS_API ULfAnimNotify_Script : public UAnimNotify  
+{  
+    GENERATED_BODY()  
+    UPROPERTY(EditAnywhere, Category="Name")  
+    FName FunctionName = "None";  
+    //获取通知名称  
+    virtual FString GetNotifyName_Implementation() const override;  
+    //触发通知  
+    virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;  
+};
+```
+
+```cpp
+
+#include "AnimNotify/LfAnimNotify_Script.h"  
+  
+FString ULfAnimNotify_Script::GetNotifyName_Implementation() const  
+{  
+    return FunctionName.ToString();  
+}  
+  
+void ULfAnimNotify_Script::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,  
+    const FAnimNotifyEventReference& EventReference)  
+{  
+    Super::Notify(MeshComp, Animation, EventReference);  
+    if (!MeshComp) return;  
+    if (AActor* TempActor = MeshComp->GetOwner())  
+    {       if (UFunction* TempFunction = TempActor->FindFunction(FunctionName))  
+       {          UE_LOG(LogTemp, Warning, TEXT("AnimNotify_Script: %s"), *FunctionName.ToString());  
+                    TempActor->ProcessEvent(TempFunction, nullptr);  
+       }    }    }
+```
+
+### 更新武器触发逻辑，每次触发只造成一次伤害(Actor数组)
+```ts
+WeaponOverlop(OverlappedComponent: $Nullable<UE.PrimitiveComponent>, OtherActor: $Nullable<UE.Actor>, OtherComp: $Nullable<UE.PrimitiveComponent>, OtherBodyIndex: number, bFromSweep: boolean, SweepResult: UE.HitResult)  
+{  
+    if(this == OtherActor) return;  
+    if(!this.HitActor.Contains(OtherActor)){  
+        this.HitActor.Add(OtherActor);  
+        //这个数组存起来，保证每次平A只会命中一次  
+        UE.KismetSystemLibrary.PrintString(  
+            this,  
+            `${this.GetName()}击中了->${OtherActor.GetName()}`,  
+            true,  
+            true,  
+            UE.LinearColor.Green,  
+            5.0  
+        );  
+            }  
+    }  
+  
+//开始伤害(蒙太奇通知)  
+BeginDamage() {  
+    this.HitActor.Empty();  
+    this.DamageBox.SetCollisionEnabled(UE.ECollisionEnabled.QueryOnly);  
+    }  
+  
+EndDamage() {  
+    this.HitActor.Empty();  
+    this.DamageBox.SetCollisionEnabled(UE.ECollisionEnabled.NoCollision);  
+}
+```
+
+### 伤害扣血逻辑，发送标签，使用一个GAS的函数回调
+- 项目设置里加标签
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625161152137.png)
+- “基础角色”.ts中进行触发时，发送事件
+```ts
+//命中标签  
+const MeleeHitTag = new UE.GameplayTag("Ability.Melee.HitEvent");
+
+InitBind(){  
+    。。。
+    
+    
+    this.DamageBox.OnComponentBeginOverlap.Add((...args)=> this.WeaponOverlop(...args));  
+    }
+
+
+WeaponOverlop(OverlappedComponent: $Nullable<UE.PrimitiveComponent>, OtherActor: $Nullable<UE.Actor>, OtherComp: $Nullable<UE.PrimitiveComponent>, OtherBodyIndex: number, bFromSweep: boolean, SweepResult: UE.HitResult)  
+{  
+    if(this == OtherActor) return;  
+    if(!this.HitActor.Contains(OtherActor)){  
+        this.HitActor.Add(OtherActor);  
+        //这个数组存起来，保证每次平A只会命中一次  
+        UE.KismetSystemLibrary.PrintString(  
+            this,  
+            `${this.GetName()}击中了->${OtherActor.GetName()}`,  
+            true,  
+            true,  
+            UE.LinearColor.Green,  
+            5.0  
+        );  
+        const GameplayEventData = new UE.GameplayEventData();  
+        GameplayEventData.EventTag = MeleeHitTag;  
+        GameplayEventData.Instigator = this;  
+        GameplayEventData.Target = OtherActor;  
+        UE.AbilitySystemBlueprintLibrary.SendGameplayEventToActor(this,MeleeHitTag,GameplayEventData);  
+            }  
+    }
+```
+- GA_Melee.ts 中进行绑定事件
+```ts
+const MeleeHitTag = new UE.GameplayTag("Ability.Melee.HitEvent");  
+  
+//伤害类  
+const MeleeDamageClass = UE.Class.Load("/Game/BluePrints/Ability/_00Melee/GE_Melee_Damage.GE_Melee_Damage_C");
+
+//绑定命中事件  
+private BindHitEvent(){  
+    const GameplayEvent = UE.AbilityTask_WaitGameplayEvent.WaitGameplayEvent(this, MeleeHitTag,null,false,true);  
+  
+    GameplayEvent.EventReceived.Add((...arge)=> this.HitEvent(...arge));  
+  
+    GameplayEvent.ReadyForActivation();  
+}  
+  
+//命中事件触发,扣血  
+private HitEvent(Payload: UE.GameplayEventData){  
+    // 测试打印 UE.KismetSystemLibrary.PrintString(this, "命中事件触发", true, true, new UE.LinearColor(1, 0, 0, 1), 5);  
+    
+    this.BP_ApplyGameplayEffectToTarget
+    (          UE.AbilitySystemBlueprintLibrary.AbilityTargetDataFromActor(Payload.Target),   
+        MeleeDamageClass,  
+        UE.KismetMathLibrary.RandomIntegerInRange(0,4)  
+        )   
+        
+ }
+
+
+```
+
+
+## 4.伤害UI更新显示
+新建UMG蓝图，添加进度条----敌人添加Widget组件--创建UMG蓝图.ts---绑定血条显示的是属性值--- UI旋转面向玩家
+
+- 创建简单的敌人血条显示widget，对数字与进度条的数值创建绑定函数
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260703161809544.png)
+- 敌人蓝图中添加组件，一定是world显示(这样UI的显示随距离有大小变化)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260703161903733.png)
+- 创建控件蓝图的ts文件，重写显示文字与数值的绑定函数
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../../mixin";
+
+const AssetPath = "/Game/BluePrints/Character/Enemy/UMG/UMG_EnemyBar.UMG_EnemyBar_C";  
+  
+export interface UMG_EnemyBar extends UE.Game.BluePrints.Character.Enemy.UMG.UMG_EnemyBar.UMG_EnemyBar_C {  
+}  
+  
+@mixin(AssetPath)  
+//有继承：export class UMG_EnemyBar extends xxxx implements UMG_EnemyBar { }  
+export class UMG_EnemyBar implements UMG_EnemyBar {  
+    //血量  
+    HP:number;  
+    //最大血量  
+    Max_HP:number;  
+    
+    GetPercent():number
+    {  
+        return UE.KismetMathLibrary.FClamp(this.HP/this.Max_HP,0,1);  
+    }    
+    
+    Get_BarText():string
+    {  
+        return `${this.HP}/${this.Max_HP}`;  
+        //给文本框的绑定函数返回显示字符串  
+    }  
+    }
+```
+
+- 在BP_Enemy.ts中写好UI更新时机以及控制UI面向人屏幕旋转
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+import {BP_BaseCharacter} from "../BP_BaseCharacter";  
+import {UMG_EnemyBar} from "./UMG/UMG_EnemyBar";  
+import {$ref, $Ref} from "puerts";  
+  
+const AssetPath = "/Game/BluePrints/Character/Enemy/BP_Enemy.BP_Enemy_C";  
+//创建属性  
+const AttributeSetHP = new UE.GameplayAttribute("HP","/Script/PTGAS.BaseAttributeSet:HP",null);  
+const AttributeSetMaxHP = new UE.GameplayAttribute("MaxHP","/Script/PTGAS.BaseAttributeSet:MaxHP",null);  
+  
+  
+export interface BP_Enemy extends UE.Game.BluePrints.Character.Enemy.BP_Enemy.BP_Enemy_C {  
+}  
+  
+@mixin(AssetPath)  
+export class BP_Enemy extends BP_BaseCharacter implements BP_Enemy {  
+    UMG_Bar: UMG_EnemyBar;  
+    bSuccess: $Ref<boolean> = $ref(false);  
+    NewRotation: UE.Rotator;  
+    _rotationIntervalId: ReturnType<typeof setInterval> | null = null;  
+  
+    ReceiveBeginPlay()
+    {  
+        // super.ReceiveBeginPlay();  
+        this.InitAbility();  
+        this.InitBind();  
+  
+        this.UMG_Bar = this.Bar.GetUserWidgetObject() as UMG_EnemyBar;  
+        this.SetBarValue();  
+  
+        // 在 BeginPlay 中初始化，不能放类字段初始化器里（mixin 模式下不会执行）  
+        this.NewRotation = new UE.Rotator();  
+  
+        // 用 setInterval 代替 Tick        this._rotationIntervalId = setInterval(() => {  
+            this.SetBarRotation();  
+        }, 50);  
+        //50ms执行一次  
+    }  
+    
+    
+    //监听血量变化  
+ protected HPChangedEvent(Value: number) {  
+     super.HPChangedEvent(Value);  
+     this.SetBarValue();  
+ }  
+ 
+//ReceiveTick(DeltaSeconds: number) {  
+    //super.ReceiveTick(DeltaSeconds);这段导致了崩溃  
+    //this.SetBarRotation();  
+//}  
+
+    SetBarValue(){  
+        if(this.UMG_Bar){  
+            this.UMG_Bar.HP = UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent  
+            (  
+                this.AbilitySystemComponent,  
+                AttributeSetHP,                this.bSuccess  
+            );  
+            this.UMG_Bar.Max_HP = UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent  
+            (  
+                this.AbilitySystemComponent,  
+                AttributeSetMaxHP,                this.bSuccess  
+            );  
+            console.log(this.UMG_Bar.HP,this.UMG_Bar.Max_HP);  
+        }   
+         }  
+        
+    SetBarRotation(){  
+        const CameraRotation = UE.GameplayStatics.GetPlayerCameraManager(this,0).K2_GetActorRotation();  
+        this.NewRotation.Pitch = CameraRotation.Pitch * -1;  
+        this.NewRotation.Yaw = CameraRotation.Yaw + 180;  
+        this.NewRotation.Roll = CameraRotation.Roll * -1;  
+        this.Bar.K2_SetWorldRotation(this.NewRotation, false, null, false);  
+    }}
+```
+
+## 5. 角色死亡(玩家/敌人)后的处理
+
+死亡制作以及移除被动
+
+### 动画蓝图动画
+1. 动画蓝图中创建一个Dead的bool变量
+2. ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260707172403329.png)
+
+### Base与Enmey的添加
+1. 在Base蓝图中添加Dead的bool变量，表示死亡状态
+2. 在Base.ts 的HP监听函数中，设置死亡后需要改的设置
+	1. 设置动画蓝图Dead=true;
+	2. 自己蓝图变量Dead=true;
+	3. 移除自动回血的技能；
+	4. 关闭物理碰撞
+3. Enmey.ts中需要关闭Tick(定时器)和Bar(血条UI)
+
+- Base.ts
+```ts
+const BaseResponseTag = new UE.GameplayTag("Ability.BaseResponse");
+
+ABP_Sinbi:UE.Game.BluePrints.Character.Animations.ABP_Sinbi.ABP_Sinbi_C = null;
+
+protected BaseInit(){  
+    this.ABP_Sinbi = this.Mesh.GetAnimInstance() as UE.Game.BluePrints.Character.Animations.ABP_Sinbi.ABP_Sinbi_C;  
+    this.InitAbility();  
+    this.InitBind();  
+}
+
+protected HPChangedEvent(Value:number){  
+    if(Value <= 0 && !this.Dead){  
+        this.Dead = true;  
+        this.ABP_Sinbi.Dead = true;//设置动画蓝图的死亡状态  
+        //移除被动回复效果  
+        this.AbilitySystemComponent.RemoveActiveEffectsWithTags(this.GetAbilityTag(BaseResponseTag));  
+        this.CapsuleComponent.SetCollisionEnabled(UE.ECollisionEnabled.NoCollision);  
+    }      
+}
+
+```
+
+- Enmey.ts
+```ts
+protected HPChangedEvent(Value: number) {  
+    super.HPChangedEvent(Value);  
+    this.SetBarValue();  
+    if(this.Dead){  
+        if(this.Bar){  
+            this.Bar.K2_DestroyComponent(this);  
+        }        if(this._rotationIntervalId!==null){  
+            clearInterval(this._rotationIntervalId);  
+            this._rotationIntervalId = null;  
+        }    }}
+        
+SelfTick(){  
+    if(!this.Dead){  
+        this.SetBarRotation();  
+    }   
+    }
+        
+```
+
+## 6. 敌人简单行为树
+创建AI控制器/黑板---绑定敌人蓝图的pawn---创建导航体积---创建任务(寻找玩家，普通攻击)---新建AI控制。ts(启动行为树)---新建Find，Melee.ts---禁用玩家死亡后的控制
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260712172139970.png)
+
+## UI面板搭建
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260715001752956.png)

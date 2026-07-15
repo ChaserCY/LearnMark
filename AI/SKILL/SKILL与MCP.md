@@ -1,3 +1,5 @@
+![](图片/AI/SKILL/SKILL与MCP/IMG-20260604163903694.png)
+
 # 一次简单的SKILL使用，所有的流程
 ![](图片/AI/SKILL/SKILL与MCP/IMG-20260203171002586.png)
 # Renference ，读(消耗Token)
@@ -108,7 +110,7 @@ Agent SKILL 中的Script 只会执行，不会读取
 - **本地性**：大多数 MCP 服务器其实就是你电脑上的一个 main.py 或 index.js。
     
 - **通讯协议**：它之所以叫服务器，是因为它和客户端之间通过 **JSON-RPC** 协议进行通讯（通常基于标准输入输出 stdio 或 SSE 网络流）。
-    
+
 
 ---
 
