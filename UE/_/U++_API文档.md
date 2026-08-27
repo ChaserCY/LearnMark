@@ -24,11 +24,159 @@ UFUNCTION()
 - 声明UCLASS==类==的指针,TSubclassOf
 ```cpp
 TSubclassOf<class UBaseGameplayAbility> XXX;
+
+ULFSampleHttpTimeAsyncAction* AsyncAction = NewObject<ULFSampleHttpTimeAsyncAction>();
+//ULFSampleHttpTimeAsyncAction是自己创建的类
 ```
 
+## 数组
+```cpp
+TArray<类> Arr名;
+TArray<FString> StrArr
+
+Arr.Add();                  //手上已有现成对象实例
+Arr.Emplace();              //要新建对象塞数组，还没实例，会在数组中直接创建对象
+Arr.Insert(<元素>，<位置>);  //对应索引位置插入
+StrArr.Append(Arr<元素...>); //拼接字符串数组，在后面加一坨
+StrArr.AddUnique(元素)       //添加唯一元素
+StrArr.EmplaceUnique(元素)  //同上
+StrArr.SetNum(数字)          //设置数组长度，多的不要，少时填默认值
+StrArr.Remove(元素)          //移除对应元素
+StrArr.RemoveAt(索引)        //移除对应索引元素
+StrArr.GetData()                   //返回数组的起始指针
+
+for((const不修改迭代值) auto(&) Str:StrArr)     //引用与创建临时对象的迭代
+{
+
+}
+
+for(int32 Index = 0;Index<StrArr.Num();Index++)
+{
+
+}
+
+//排序,有Sort,HeapSort,StableSort 基于不同原理的排序
+StrArr.Sort([](const FString& A,const FString& B){
+return A.Len()<B.Len();
+})
+
+//Slack元素：数组没有元素时内存上所占的当前未使用的有效预分配元素储存槽
+TArray<int32> SlackArray;
+//SlackArray.GetSlack()=0
+//SlackArray.Num()=0
+//SlackArray.Max()=0
+
+SlackArray.Add(1);
+//SlackArray.GetSlack()=3;容量不够时，按倍数增长（默认后续约翻倍：4→8→16→32…）
+//SlackArray.Num()=1;
+//SlackArray.Max()=4
+
+SlackArray.Empty()
+//全部清零,释放所有内存
+
+SlackArray.Empty(3)
+//给Slack分配数量
+//SlackArray.GetSlack()=3;
+//SlackArray.Num()=0;
+//SlackArray.Max()=3;
+
+SlackArray.Reset(0)//分配Slack空间
+//0小于上面的3，就不再分配Slack
+//SlackArray.GetSlack()=3;
+//SlackArray.Num()=0;
+//SlackArray.Max()=3;
+
+SlackArray.Reset(10)
+//10大于上面的3，就不再分配Slack
+//SlackArray.GetSlack()=10;
+//SlackArray.Num()=0;
+//SlackArray.Max()=10;
+
+SlackArray.Shrink()
+//释放所有Slack，Num=Max
+
+//为了**性能优化**：
+//普通 Insert 会先创建临时对象，再移动 / 拷贝进数组。
+//`InsertUninitialized + Placement New`直接在数组内存上原地构造对象，省去临时对象拷贝开销。
+TArray<FString> UninitStrs;
+UninitStrs.Emplace(TEXT("A"));
+UninitStrs.Emplace(TEXT("D"));
+UninitStrs.InsertUninitialized(1,2);    //分配单纯的内存空间，1号索引，2个单位
+new ((void*)(UninitStrs.GetData() +·1)) FString(TEXT("B"));//new了索引1的对象
+new ((void*)(UninitStrs.GetData() +·2)) FString(TEXT("C"));
+
+//与上面类似
+char* buffer =new char[4];
+FXGAddStructInfo* Struct =new (buffer)FXGAddStructInfo;
+delete []buffer;
+// 普通 `new` 是「向系统申请新内存 + 在新内存上构造对象」两步一起完成；
+// 定位 `new` **不申请新内存**，它直接在你指定的 `buffer` 这块已有内存地址上，调用 `FXGAddStructInfo` 的构造函数，原地造出一个对象。
+// 最终 `Struct` 指针和 `buffer` 指向的是**同一块内存地址**，只是类型从 `char*` 变成了结构体指针。
+//不会触发析构函数
+
+//数组追加内存空间
+StrArr.AddZeroed(N)  //数组末尾追加N个单位内存空间
+StrArr.InsertZeroed(i,N)   //数组i索引后追加N个单位内存空间
+
+SArr.SetNumUninitialized(3); //设置内存大小
+new ((void*)(SArr.GetData() + 1)) S(5,(void*)0x12345678,3.14);//对应索引1new对象
+new ((void*) (SArr.GetData() + 2)) S(2,(void*)0x87654321,2.72);
+// SArr ==[
+// {Int:0, Ptr: nullptr,Flt:0.0f} ,
+// {Int:5,Ptr:0x12345678,Flt:3.14f} ,
+//{Int:2,Ptr:0x87654321,Flt:2.72f }
+//]
+
+SArr.Swap(i,j)   //交换两个索引的位置,但会检查数组越界
+StrArr.SwapMemory(i,j)  //只有交换位置功能
+
+StrArr.AddDefaulted(N);  //尾部追加N个无参构造的对象
+Arr.AddDefaulted_GetRef();   //直接返回添加对象的引用
+//伪代码
+//AddDefaulted(1); return GetData()[Num()-1]; 
+// 返回新元素引用
+
+```
+
+## 字符串
+```cpp
+FString s1 = "测试"; // ❌ Windows下乱码！窄字符 
+FString s2 = TEXT("测试"); // ✅ 正确，宽字符
+//括号中只能弄字面量，不能包变量
+
+
+```
 ## 结构体
 - 声明结构体与结构体数组
 ```cpp
+.h文件
+
+USTRUCT()
+struct FXGEquStructInfo
+{
+GENERATED_BODY()
+
+public:
+FXGEquStructInfo()
+{
+}
+
+FXGEquStructInfo(int32 InID):ID(InID)
+{
+}
+
+~FXGEquStructInfo()
+{
+}
+
+int32 ID=0;
+
+bool operator==(const FXGEquStructInfo& other)const
+{
+	retrun ID==other.ID?true:false;
+}
+
+}
 
 ```
 
@@ -165,3 +313,15 @@ checkf(InInputConfig, TEXT("Input Config data asset is null,can not proceed with
 ```
 ![](图片/UE/_/U++_API文档/IMG-20260622193347737.png)
 ![](图片/UE/_/U++_API文档/IMG-20260622193347811.png)
+
+
+# 特殊框架
+## 异步蓝图函数
+```cpp
+
+
+```
+
+```cpp
+
+```

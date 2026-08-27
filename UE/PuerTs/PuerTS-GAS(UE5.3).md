@@ -131,6 +131,8 @@ TypeScript
 ## 编辑同步
 在编辑器中，对蓝图进行了修改，就点击上方插件的按钮还有下方的编译
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217732.png)
+或者使用引擎内的cmd窗口输入：
+==Puerts.Gen==
 
 C++类的代码进行了修改就需要点击右下角的
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217792.png)
@@ -1432,5 +1434,244 @@ SelfTick(){
 创建AI控制器/黑板---绑定敌人蓝图的pawn---创建导航体积---创建任务(寻找玩家，普通攻击)---新建AI控制。ts(启动行为树)---新建Find，Melee.ts---禁用玩家死亡后的控制
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260712172139970.png)
 
-## UI面板搭建
+## 7. UI
+### UI面板搭建(Widget)
+创建三个UMG面板，分别是技能图标，属性图标，还有主体框
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260717194956611.png)
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260715001752956.png)
+
+### UI面板功能实现
+激活控件蓝图中的红色事件(还需创建一个变量Linear Color)---控件图标设置为变量---创建3个控件的ts文件---创建BP_GameplayAbility.ts---在Controller里创建Widget添加到窗口
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260718004239426.png)
+- UMG_Main.ts
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../../mixin";  
+import {TArray} from "ue";  
+  
+const AssetPath = "/Game/BluePrints/Character/Player/UMG/UMG_MainUI.UMG_MainUI_C";  
+  
+export interface UMG_MainUI extends UE.Game.BluePrints.Character.Player.UMG.UMG_MainUI.UMG_MainUI_C {  
+}  
+  
+@mixin(AssetPath)  
+export class UMG_MainUI implements UMG_MainUI {  
+    AllAbilitySlot:TArray<UE.Game.BluePrints.Character.Player.UMG.UMG_AbilitySlot.UMG_AbilitySlot_C>  
+    OnInitialized() {  
+            }  
+    PreConstruct(IsDesignTime: boolean) {  
+        this.AllAbilitySlot.Add(this.AbilitySlot_1);  
+        this.AllAbilitySlot.Add(this.AbilitySlot_2);  
+        this.AllAbilitySlot.Add(this.AbilitySlot_3);  
+        this.AllAbilitySlot.Add(this.AbilitySlot_4);  
+        this.AllAbilitySlot.Add(this.AbilitySlot_5);  
+  
+  
+    }}
+```
+- UMG_AttributeBar.ts
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../../mixin";  
+  
+const AssetPath = "/Game/BluePrints/Character/Player/UMG/UMG_AttributeBar.UMG_AttributeBar_C";  
+  
+export interface UMG_AttributeBar extends UE.Game.BluePrints.Character.Player.UMG.UMG_AttributeBar.UMG_AttributeBar_C {  
+}  
+  
+@mixin(AssetPath)  
+//有继承：export class UMG_AttributeBar extends xxxx implements UMG_AttributeBar { }  
+export class UMG_AttributeBar implements UMG_AttributeBar {  
+    PreConstruct(IsDesignTime: boolean) {  
+        this.SetColor();  
+    }    protected SetColor(){  
+        this.Image_Bar.GetDynamicMaterial().SetVectorParameterValue("Color",this.Color);  
+    }    SetProgress(Progress:number){  
+        this.Image_Bar.GetDynamicMaterial().SetScalarParameterValue("Pre",UE.KismetMathLibrary.FClamp(Progress,0,1));  
+    }          
+}
+```
+- UMG_AbilitySlot.ts
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../../mixin";  
+import{BP_GameplayAbility} from "../../../Ability/BP_GameplayAbility";  
+  
+  
+const AssetPath = "/Game/BluePrints/Character/Player/UMG/UMG_AbilitySlot.UMG_AbilitySlot_C";  
+  
+export interface UMG_AbilitySlot extends UE.Game.BluePrints.Character.Player.UMG.UMG_AbilitySlot.UMG_AbilitySlot_C {  
+}  
+  
+@mixin(AssetPath)  
+export class UMG_AbilitySlot implements UMG_AbilitySlot {  
+    //总CD  
+    CD_Intel:number;  
+    //当前CD  
+    CD_Current:number;  
+    //在技能CD区间  
+    IsDuringCD:boolean;  
+    //技能类  
+    AbilityClass:UE.Class;  
+    PreConstruct(IsDesignTime: boolean) {  
+        this.Key.SetText(this.KeyText);  
+    }  
+    Tick(MyGeometry: UE.Geometry, InDeltaTime: number) {  
+        this.UpdateCD(InDeltaTime);  
+    }  
+    //初始化信息  
+    InitInfo(AbilityInfo:UE.GameplayAbilityInfo){  
+        this.CD_Intel = AbilityInfo.CD;  
+        this.AbilityClass=AbilityInfo.AbilityClass;  
+        this.AbilityImage.SetBrushFromMaterial(AbilityInfo.IconMaterial);  
+    }    StartUI_CD(){  
+        this.IsDuringCD = true;  
+        this.CD.SetVisibility(UE.ESlateVisibility.Visible);  
+        this.CD_Current = this.CD_Intel;  
+    }    UpdateCD(DeltaTime:number) {  
+        //处于CD中...  
+        if(this.IsDuringCD){  
+            this.CD_Current = UE.KismetMathLibrary.FClamp(this.CD_Current-DeltaTime,0,this.CD_Intel);  
+            if(this.CD_Current>0){  
+                this.CD.SetText(  
+                    UE.KismetTextLibrary.Conv_DoubleToText(  
+                        this.CD_Current,UE.ERoundingMode.HalfToEven,false,true, 1,324,0,1  
+                    )  
+                )                this.AbilityImage.GetDynamicMaterial().SetScalarParameterValue("Pre",UE.KismetMathLibrary.FClamp((1-this.CD_Current/this.CD_Intel),0,1))  
+            }            else{  
+                this.IsDuringCD = false;  
+                this.CD.SetVisibility(UE.ESlateVisibility.Hidden);  
+                this.AbilityImage.GetDynamicMaterial().SetScalarParameterValue("Pre",1);  
+            }        }    }}
+```
+
+### UI 属性初始化及绑定
+在Main面板中修改三个圆的颜色---player.ts中添加血量变化时的逻辑(蓝图函数，ts重写，圆圈)---在BP_Player中新建技能数组(开启类）---创建测试GA，添加到Player中
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721174953591.png)
+Player.ts
+```ts
+InitAbility()
+{  
+    super.InitAbility();  
+    
+    for(let i=0;i<this.GAS.Num();i++)
+    {  
+        if(this.GAS.GetRef(i))
+        {  
+            this.AbilitySystemComponent.K2_GiveAbility(this.GAS.GetRef(i));  
+            this.BP_PlayerController.MainUI.AbilitySlots.GetRef(i).InitInfo(this.GetAbilityInfo(this.GAS.GetRef(i),0));  
+        }    
+    }
+}
+        //重写了InitAbility()初始化技能函数，循环激活技能
+
+//添加了血量变化时的控制UI变化
+protected HPChangedEvent(Value: number){  
+    super.HPChangedEvent(Value);  
+    const Pre = Value/UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent(this.AbilitySystemComponent,AttributeSetMaxHP,null);  
+    this.BP_PlayerController.MainUI.HPAttributeBar.SetProgress(Pre);  
+          
+//玩家死亡时  
+    if(this.Dead){  
+       //禁用输入  
+        this.DisableInput(this.BP_PlayerController);  
+           }  
+    }
+
+```
+
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721003641002.png)
+- 给人物添加技能
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721174927842.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721182131517.png)
+
+## 8. 制作技能
+### 1. 回血技能
+创建ts变量的报错问题(ts中命名-加载-new-卸载)-----添加一个GA(新建对应标签)+三个GE----1.Cost-及时消耗MP数值，2. CD-持续消耗5s，添加阻塞组件，Gameplay Cues（有新标签）-----添加gameplaycue的静态蓝图---在controll蓝图中添加测试，并添加技能同名函数---改controll,gameplayAbility--添加GA.ts(激活)---添加GC_HPRegen.ts(生成粒子)-----GA中播放蒙太奇动画，加载GE_Value，做恢复数值
+
+
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260729170048095.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260808010511552.png)
+- GA_HPRegen
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+import {BP_GameplayAbility} from "../BP_GameplayAbility";  
+//需要导入mixin 模块  
+  
+//如果该蓝图继承自别的蓝图，还需要导入对应ts模块  
+//import {xxxx} from "../xxxx";  
+  
+const AssetPath = "/Game/BluePrints/Ability/_01HPRegen/GA_HPRegen.GA_HPRegen_C";  
+//恢复动作  
+const MA_HPRegen = UE.AnimMontage.Load("/Game/BluePrints/Character/Animations/Montage/MA_HPRegen.MA_HPRegen");  
+//恢复数值（Class类需要加 _C）  
+const GE_HPRegenValueClass = UE.Class.Load("/Game/BluePrints/Ability/_01HPRegen/GE_HPRegen_Value.GE_HPRegen_Value_C");  
+  
+export interface GA_HPRegen extends UE.Game.BluePrints.Ability._01HPRegen.GA_HPRegen.GA_HPRegen_C {  
+}  
+  
+@mixin(AssetPath)  
+export class GA_HPRegen extends BP_GameplayAbility implements GA_HPRegen {  
+    K2_ActivateAbility(){  
+        this.K2_CommitAbility();  
+        this.StartUI_CD();  
+        this.BP_ApplyGameplayEffectToOwner(GE_HPRegenValueClass);  
+        this.PlayHPRegenMontage();  
+    }    PlayHPRegenMontage(){  
+        const MontageTask = UE.AbilityTask_PlayMontageAndWait.CreatePlayMontageAndWaitProxy  
+        (  
+            this,  
+            "HPRegen",       //名称  
+            MA_HPRegen                       //动画  
+        );  
+        MontageTask.OnCompleted.Add(()=>this.K2_EndAbility());  
+        MontageTask.OnInterrupted.Add(()=>this.K2_EndAbility());  
+        MontageTask.OnBlendOut.Add(()=>this.K2_EndAbility());  
+        MontageTask.OnCancelled.Add(()=>this.K2_EndAbility());  
+        MontageTask.ReadyForActivation();  
+    }}
+```
+
+- GC_HPRegen
+```ts
+import * as UE from 'ue';  
+import mixin from "../../../mixin";  
+import {$Nullable} from "puerts";  
+  
+//需要导入mixin 模块  
+  
+//如果该蓝图继承自别的蓝图，还需要导入对应ts模块  
+//import {xxxx} from "../xxxx";  
+  
+const AssetPath = "/Game/BluePrints/Ability/_01HPRegen/GC_HPRegen.GC_HPRegen_C";  
+  
+//特效  
+const HPRegenFX = UE.ParticleSystem.Load("/Game/Assets/Abilities/HealthRegen/P_HealthRegen.P_HealthRegen");  
+  
+  
+export interface GC_HPRegen extends UE.Game.BluePrints.Ability._01HPRegen.GC_HPRegen.GC_HPRegen_C {  
+}  
+  
+@mixin(AssetPath)  
+//有继承：export class GC_HPRegen extends xxxx implements GC_HPRegen { }  
+export class GC_HPRegen implements GC_HPRegen {  
+    WhileActive(MyTarget: $Nullable<UE.Actor>, Parameters: UE.GameplayCueParameters): boolean {  
+        if(HPRegenFX){  
+            UE.GameplayStatics.SpawnEmitterAtLocation(  
+                this,  
+                HPRegenFX,                MyTarget.K2_GetActorLocation(),  
+                MyTarget.K2_GetActorRotation(),  
+                MyTarget.GetActorScale3D(),  
+                true,  
+                UE.EPSCPoolMethod.AutoRelease,   //这里原来用的是ManualRelease  
+                true  
+            )  
+        }        return true;  
+    }  
+}
+``` 
+
+## 9. 输出操作的改写
+新建C++类，继承自UExtensionMethods(写一个函数，然后实现一下，是否存在，然后使用绑定函数)---C++类中新加入动作函数---在Controller.ts中去添加输入动作和对应函数(前提创建好IA，添加至上下文)----修改Look，Move函数(有传参数)的输入值Input Action Value---把视野锁定的也添加上
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260825213934654.png)

@@ -23,4 +23,42 @@
 	  - TS 类的构造函数不会被调用
 	  - 字段初始化器（= false、= null）不会执行
 	  - Die、ABP_Sinbi 在 ReceiveBeginPlay 之前都是 undefined
-
+14. AI行为树没有启动
+	1. 行为树下的任务文件在ts中，导入没有加入后缀_C（AssetPath里都是_C结尾，没有检查）
+	2. 
+15. 出现未定义的报错
+	1. 可能是定义位置问题(ts,蓝图)
+	2. begin初始化时的调用顺序不对
+16. 没有打开编辑器就直接崩溃了
+	""真正原因""：BP_GameMode--BP_Player--BP_PlayerController 内部出现问题，打开蓝图或者打开对应关卡就是会崩溃
+	==解决措施==：先删地图(Level)，逐一排查GameMode相关文件。使用Git中的历史提交，直接回溯；或者删除重建；或者不要注入蓝图文件，改C++类
+	 **可能的原因：**
+    - **原因一：Main_Map.umap 中放置了损坏的资产或 Blueprint**  
+        地图中某个 Actor/组件在 PostLoad()、BeginPlay() 或构造函数中引用了空指针，导致加载地图时直接崩溃。
+        排查：可能是在地图保存过程中，突然关闭了进程
+    - **原因二：Puerts (TypeScript) 脚本/生成代码未同步**  
+        你的项目路径中包含 PuerTTS，且加载了 Puerts 插件。如果 TypeScript 没有编译、生成代码丢失或 C++ 导出的绑定与 TS 代码不匹配，在构造 CDO（类默认对象）时极易引发 CoreUObject 层的空指针崩溃。
+        排查TS,直接在MainGame.ts中注释掉import代码
+    - **原因三：C++ 代码（尤其是 GAS 相关的构造函数）存在空指针**  
+        如果你的项目有自定义 C++ 代码（项目名 PTGAS 看起来像 Gameplay Ability System 项目），在某个类的构造函数或 PostInitProperties() 中直接使用了没有判空的指针（例如未成功获取到 Asset 或 Subsystem）。
+    - **原因四：缓存 (Intermediate / Saved) 损坏**  
+        CachedAssetRegistry 或 DDC (Derived Data Cache) 记录了旧的/错误的类信息。
+		    删- Intermediate， Saved，DerivedDataCache，.vs，Binaries
+		    **Generate Visual Studio project files**重新生成
+		    打开.sln文件，生成
+	- **原因五：回溯无效，文件的git lfs 保存错误**
+		打开ue的资产文件都是乱码就是正确的，如果里面写着类似 version /https://git-lfs.github.com/spec/v1... 这样的一行文字，说明**你的 Git LFS 丢了文件！**
+	- **原因六：代码书写书写错误，字母单词，参数，库名错误**
+	- **原因七：整个插件的底层Bug，需要删除重写**
+		- 这个是puerts的一个bug，在用ts接管蓝图的时候会出现问题，导致蓝图无法打开，最好的方法，直接删除报错的那个蓝图，重新写
+	- **原因八：在C++的构造函数，蓝图的构造脚本中使用ts代码逻辑(序列化顺序)**
+	- **原因九：在运行过游戏或者ts注入后，直接保存了蓝图内容在.uasset中，下次加载，还没有运行ts时，直接引用为空**
+	- **原因十：蓝图创建的函数与TS所指向的函数不同，不使用蓝图创建的函数来重写**
+		- UE 蓝图编译器（Kismet）重编译资产时，无法解析“蓝图字节码”与“Puerts Native 句柄”混合的畸形结构。
+	- **原因十一：给蓝图资产（.uasset）做 mixin 会引发不可避免的物理崩溃**。==处理成功==
+		- 重构架构，mixin->C++，蓝图再继承
+17. Bar进度条控件，背景图与填充图颜色不一致
+	1. 原因：外观-颜色不是纯白，背景图不受外观影响，而填充图会因外观的颜色叠加(包括父类)
+	2. 解决：直接把外观弄成白色
+18. 蓝图与TS拥有==同名变量==引起的接口错误的拓展蓝图类
+	1. ![](图片/UE/PuerTs/TS遇到的问题/IMG-20260825185209831.png)
