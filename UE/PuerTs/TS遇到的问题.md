@@ -61,4 +61,40 @@
 	1. 原因：外观-颜色不是纯白，背景图不受外观影响，而填充图会因外观的颜色叠加(包括父类)
 	2. 解决：直接把外观弄成白色
 18. 蓝图与TS拥有==同名变量==引起的接口错误的拓展蓝图类
-	1. ![](图片/UE/PuerTs/TS遇到的问题/IMG-20260825185209831.png)
+	1. 
+![](图片/UE/PuerTs/TS遇到的问题/IMG-20260825185209831.png)
+19. 制作技能时，
+	1. 情况1：运行时，第二次点击技能就崩溃了
+	2. 情况2：运行时，点击技能1.5s后直接崩溃
+	1.
+```
+ ** LoginId:5d19517c4f79783a713df8b392134cd2  	   
+  EpicAccountId:d7721dce4cca47c69537bd4d4f0ab5ba                                                                                                                          
+  Unhandled Exception: EXCEPTION_ACCESS_VIOLATION writing address 0x0000000000000001                                                                                      
+  VCRUNTIME140                                    
+  UnrealEditor_CoreUObject                        
+  UnrealEditor_GameplayAbilities                   
+  UnrealEditor_GameplayAbilities                   
+  UnrealEditor_GameplayAbilities                          
+  UnrealEditor_CoreUObject   
+  UnrealEditor_JsEnv!puerts::FFunctionTranslator::FastCall() [K:\UE5.6.1_projects\PuerTTS-5.3\PTGAS\Plugins\Puerts\Source\JsEnv\Private\FunctionTranslator.cpp:388]            
+  UnrealEditor_JsEnv!puerts::FFunctionTranslator::Call() [K:\UE5.6.1_projects\PuerTTS-5.3\PTGAS\Plugins\Puerts\Source\JsEnv\Private\FunctionTranslator.cpp:270]            
+  UnrealEditor_JsEnv!puerts::FFunctionTranslator::Call() [K:\UE5.6.1_projects\PuerTTS-5.3\PTGAS\Plugins\Puerts\Source\JsEnv\Private\FunctionTranslator.cpp:226]             
+  v8                                                
+  v8                                               
+  v8                                              
+  v8                                           
+  v8                           
+  v8**
+```
+
+- 可能原因
+	- 1. JS 侧持有了已销毁的 GAS 对象引用（最常见）
+		- Ability 执行结束、Actor 被销毁、ASC 被移除时，底层 UObject 已经被 UE GC 回收或显式销毁，但 JS 侧的包装对象不会自动置空。****
+	- 2. FastCall 路径下参数类型 / 数量不匹配
+	- 3. GAS 对象本身的空指针(无效GAS对象)
+	- 4. 一个 GameplayAbility 被激活后，必须调用 K2_EndAbility() 才会结束(无需担心K2_EndAbility函数的重复调用空指针，==情况1解决==)
+	- 5. 删除蓝图文件，重建同名的不行？会造成文件损坏，并需要修改之前的绑定
+	- 6. mixin到带参数的引擎回调函数，导致计算参数传递空指针。==其实是蓝图中，对应函数没有激活==(ts中谨慎填写带参数的引擎回调函数，使用蓝图，==情况2解决==）
+
+20. 技能制作时，事件监听没有生效，注意把命名的等待事件激活ReadyForActivation()

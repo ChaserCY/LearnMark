@@ -698,7 +698,8 @@ public:
     float CostValue;  
     //无参构造函数  
     FGameplayAbilityInfo()  
-    {       AbilityClass = nullptr;  
+    {       
+    AbilityClass = nullptr;  
        IconMaterial = nullptr;  
        CD = 0.f;  
        CostType = ECostType::ECT_HP;  
@@ -1672,6 +1673,107 @@ export class GC_HPRegen implements GC_HPRegen {
 }
 ``` 
 
+### 2.1 冲刺技能(上)
+创建GA,GE_Cost,GE_CD 三件套---新的Tag---新建GA_Dash.ts---在BP_Play中添加新GA---ControolerC++中创建新的Dash函数BlueprintNativeEvent(函数中写Player激活技能)---创建绑定输入----添加动画蒙太奇，在GA.ts里面激活这个任务---在BaseCharacter.ts中，新建两个函数，一个用来实现冲刺，另一个用来设置摩擦力---在GA.ts中激活时，使用冲刺函数(注意在结束函数中加入还原摩擦力)
+
+### 2.2 冲刺技能(下)
+在BP_Player视图中创建一个碰撞体球(设置初始碰撞)---在BP_Player.ts中添加球的事件，绑定触发回调的函数(添加到HitActor数组)---重载父类的函数SetFrictionToZero，添加设置摄像机杆的碰撞，球的物理检测 查询/无，球的大小SetSphereRadius，清空HitActor---添加新标签(Dash.Hit)---Player.ts中创建GameplayEvent，在技能中监听它，媒介是那个新标签(类似事件分发器)---在技能中创建两个函数，一个监听(启动等待任务)，一个回调(写主要技能逻辑，如添加GE伤害，造成冲刺撞开，造成眩晕剥夺AI控制器控制权)---眩晕内容：Base写好函数，Enmey重写，在GA_Dash.ts中激活眩晕---标签设置，Dash时不可打断，1,BP_GameplayAbility添加标签 2. 给GA_Dash加入激活过程标签(技能激活时有，结束后没有)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260831165418347.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260831202142350.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901170350910.png)
+
+### 3.1 射线技能(上)
+创建GA,2个GE，1个伤害GE(持续性消耗，添加标签方便移除。CD老样子。瞬时伤害)---一个特殊标签的蒙太奇动画(后段循环)---创建绑定好输入激活那一块(Controller)---在GA_Laser.ts中处理好激活GE，移除对应GE(BaseCharacter中新加了一个是否在激光的bool)，还有镜头锁定----需要做再次点击按键，取消技能。在Controller的函数中添加事件，然后GA中监听
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901213926952.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901214049768.png)
+![](../../Pasted%20image%2020260901214307.png)
 ## 9. 输出操作的改写
 新建C++类，继承自UExtensionMethods(写一个函数，然后实现一下，是否存在，然后使用绑定函数)---C++类中新加入动作函数---在Controller.ts中去添加输入动作和对应函数(前提创建好IA，添加至上下文)----修改Look，Move函数(有传参数)的输入值Input Action Value---把视野锁定的也添加上
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260825213934654.png)
+- ExtensionMethods类
+```cpp
+.h
+
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "EnhancedInputComponent.h"  
+#include "ExtensionMethods.h"  
+#include "LF_ExtensionMethods.generated.h"  
+  
+//与下面函数一些参数有关  
+/**  
+ * @class UExtensionMethods  插件中编写的类  
+ */UCLASS()  
+class PTGAS_API ULF_ExtensionMethods : public UExtensionMethods  
+{  
+    GENERATED_BODY()  
+    public:  
+    /**  
+     * 绑定输入动作  
+     * @param  ImputComponent 输入组件  
+     * @param InputAction 输入动作  
+     * @param TriggerEvent 触发事件  
+     * @param Object 绑定的对象  
+     * @param FunctionName 绑定的函数  
+     */    UFUNCTION(BlueprintCallable, Category = "LFExtensionMethods")  
+    static void BindAction(UEnhancedInputComponent* InputComponent, const UInputAction* InputAction, const ETriggerEvent TriggerEvent, UObject* Object, const FName& FunctionName);  
+          
+};
+
+```
+```cpp
+.cpp
+#include "Libary/LF_ExtensionMethods.h"  
+  
+void ULF_ExtensionMethods::BindAction(UEnhancedInputComponent* InputComponent, const UInputAction* InputAction,  
+    const ETriggerEvent TriggerEvent, UObject* Object, const FName& FunctionName)  
+{  
+    if (InputComponent)  
+    {       InputComponent->BindAction(InputAction, TriggerEvent, Object, FunctionName);  
+    }}
+```
+- Controller和Player中都要有对应技能的绑定
+```ts
+const JumpAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Jump.IA_Jump")  
+const MoveAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Move.IA_Move")  
+const LookAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Look.IA_Look")
+
+BindKey(){  
+    const InputComponent = this.GetComponentByClass(UE.EnhancedInputComponent.StaticClass()) as UE.EnhancedInputComponent;  
+    if(InputComponent){  
+        InputComponent.BindAction(JumpAction,UE.ETriggerEvent.Started,this,"Jumpp"); //这里的第一个函数必须是蓝图函数，或者C++蓝图可以调用的函数  
+        InputComponent.BindAction(MoveAction,UE.ETriggerEvent.Triggered, this,"Move");  
+        InputComponent.BindAction(LookAction,UE.ETriggerEvent.Triggered, this,"Look");  
+        InputComponent.BindAction(LockCameraAction,UE.ETriggerEvent.Started, this,"IA_LockCamera");  
+    }
+    }
+    
+    IA_LockCamera() {  
+    this.LookCamera(!this.InLock);  
+    this.InLock = !this.InLock;  
+}  
+  
+//鼠标移动视角  
+Look(ActionValue: UE.InputActionValue) {  
+    const Value2D = UE.EnhancedInputLibrary.Conv_InputActionValueToAxis2D(ActionValue);  
+    this.AddControllerYawInput(Value2D.X);  
+    this.AddControllerPitchInput(Value2D.Y);  
+    }  
+  
+//移动  
+Move(ActionValue: UE.InputActionValue) {  
+    //前进  
+    const Value2D = UE.EnhancedInputLibrary.Conv_InputActionValueToAxis2D(ActionValue);  
+    if (!this.Move_Rotator) {  
+        this.Move_Rotator = new UE.Rotator(0, 0, 0);  
+    }    this.Move_Rotator.Yaw =this.GetControlRotation().Yaw;  
+  
+    const ForwardVector = UE.KismetMathLibrary.GetForwardVector(this.Move_Rotator);  
+    const RightVector = UE.KismetMathLibrary.GetRightVector(this.Move_Rotator);  
+    this.AddMovementInput(ForwardVector,Value2D.Y);  
+    this.AddMovementInput(RightVector,Value2D.X);  
+    }
+```

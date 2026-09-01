@@ -257,3 +257,14 @@ void ULF_ExtensionMethods::BindAction(UEnhancedInputComponent* InputComponent, c
     {       InputComponent->BindAction(InputAction, TriggerEvent, Object, FunctionName);  
     }}
 ```
+
+### 传参数的按键动作函数
+```ts
+Look(ActionValue: UE.InputActionValue) {  
+    const Value2D = UE.EnhancedInputLibrary.Conv_InputActionValueToAxis2D(ActionValue);  
+    this.AddControllerYawInput(Value2D.X);  
+    this.AddControllerPitchInput(Value2D.Y);  
+    }
+```
+```
+```
