@@ -55,7 +55,7 @@ console.log(`\nDone: all imports already exist, nothing to add.`);
 A:$Nullable<UE.PrimitiveComponent>       //表示A这个参数可能为空，可以传nullptr，也可以是空类型
 ```
 
-- ts定时器
+- ts定时器/循环定时器
 ```ts
 //定义定时器引用，如果里面！=null，说明定时器还在运行
 _rotationIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -72,9 +72,28 @@ clearInterval(this._rotationIntervalId);
 this._rotationIntervalId=null;
 }
 
+//直接用蓝图中的定时器节点，创建和清除，这里的函数名的函数必须是蓝图或者C++的
+const t = UE.KismetSystemLibrary.K2_SetTimer(this,"CheckCost",0.25,true);
+UE.KismetSystemLibrary.K2_ClearTimerHandle(this,t);
+UE.KismetSystemLibrary.K2_PauseTimerHandle(this,t);
+UE.KismetSystemLibrary.K2_UnPauseTimerHandle(this,t);
+
+//单次定时器
+setTime(执行函数(可以Lambda)，时间(ms));
+
 ```
 
 # 函数与方法
+## 数组
+```ts
+this.HitActor.IsEmpty();
+this.HitActor.Empty();
+
+this.HitActor.Contains(OtherActor)
+
+this.HitActor.RemoveAt(this.HitActor.FindIndex(OtherActor));
+```
+
 ## 数学
 - 随机数
 ```ts
@@ -150,6 +169,22 @@ UE.GameplayStatics.SpawnEmitterAtLocation(
 ```
 ![](图片/UE/_/TS_API文档/IMG-20260808003654074.png)
 
+## 生成物
+```ts
+this.LaserActor = UE.GameplayStatics.BeginDeferredActorSpawnFromClass(this,LaserActorClass,UE.Transform.Identity);  
+UE.GameplayStatics.FinishSpawningActor(this.LaserActor,UE.Transform.Identity);
+
+this.LaserActor.K2_AttachToComponent(  
+    this.Character.LaserPoint,   
+"",              //普通组件没有SocketName，有骨骼时才填  
+    UE.EAttachmentRule.SnapToTarget,  
+    UE.EAttachmentRule.SnapToTarget,  
+    UE.EAttachmentRule.KeepRelative,  
+    false   //是否需要物理焊接  
+    )
+```
+
+
 # GAS 
 ## GameplayAbility
 - 异步蒙太奇播放任务
@@ -177,12 +212,39 @@ private PlayMeleeMontage(){
     }
 ```
 
-- GA.ts中的触发函数
+- 通过Tag发送事件和监听事件
+```ts
+//发送方，在Controller中
+const GameplayEventData = new UE.GameplayEventData();  
+GameplayEventData.EventTag = LaserEndTag;  
+GameplayEventData.Instigator = this;  
+GameplayEventData.Target = this;  
+UE.AbilitySystemBlueprintLibrary.SendGameplayEventToActor(this.BP_Player, LaserEndTag, GameplayEventData);
+//第一个参数必须是Actor，不能是Controller，标签类型是GameplayTag
+
+//接收方
+const GameplayEvent = UE.AbilityTask_WaitGameplayEvent.WaitGameplayEvent(this,LaserEndTag,null,true,true);  
+GameplayEvent.EventReceived.Add((...args)=>this.EndMontage(...args));  
+GameplayEvent.ReadyForActivation();
+// 需要自定义一个回调函数，参数是UE.GameplayEventData
+
+EndMontage(Payload: UE.GameplayEventData){  
+    this.MontageJumpToSection("End");    //当前蒙太奇跳至片段
+    this.K2_EndAbility();  
+}
+
+
+```
+
+- GA.ts中的固定的触发函数和结束回调函数（需要在蓝图激活）
 ```ts
 //GA 触发时自动执行此函数内容
 k2_ActivateAbility(){  
     
-    
+}
+
+k2_OnEndAbility(){
+
 }
 ```
 
@@ -209,6 +271,17 @@ UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent
 	this.bSuccess   //引用传递的布尔变量
 );
 //这一串返回float属性值
+```
+
+- GA中获取施法者对象引用
+```ts
+this.GetAvatarActorFromActorInfo()
+//可以用as 转换类型，但需要判断是否有效
+```
+
+- 施加/移除GE伤害
+```ts
+this.BP_ApplyGameplayEffectToTarget(Payload.TargetData,LaserDamageClass);
 ```
 
 ## 输入操作的绑定

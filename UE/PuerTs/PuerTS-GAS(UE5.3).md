@@ -1683,10 +1683,18 @@ export class GC_HPRegen implements GC_HPRegen {
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901170350910.png)
 
 ### 3.1 射线技能(上)
-创建GA,2个GE，1个伤害GE(持续性消耗，添加标签方便移除。CD老样子。瞬时伤害)---一个特殊标签的蒙太奇动画(后段循环)---创建绑定好输入激活那一块(Controller)---在GA_Laser.ts中处理好激活GE，移除对应GE(BaseCharacter中新加了一个是否在激光的bool)，还有镜头锁定----需要做再次点击按键，取消技能。在Controller的函数中添加事件，然后GA中监听
+创建GA,2个GE，1个伤害GE(持续性消耗，添加标签方便移除。CD老样子。瞬时伤害)---一个特殊标签的蒙太奇动画(后段循环)---创建绑定好输入激活那一块(Controller)---在GA_Laser.ts中处理好激活GE，移除对应GE(BaseCharacter中新加了一个是否在激光的bool)，还有镜头锁定----需要做再次点击按键，取消技能。在Controller的函数中添加事件，然后GA中监听---消耗为0，主动停止技能，使用之前写GameplayAbilityC++中写的判定内容，在开始技能时，加上一个循环定时器，一直判定消耗是否还够，如果不够就停止技能，播放End动作，并清除定时器
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901213926952.png)
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901214049768.png)
 ![](../../Pasted%20image%2020260901214307.png)
+
+### 3.2 激光技能下
+创建Actor（添加对应组件），动画蓝图(添加到对应骨骼网格体中)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903173335595.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903201039062.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903201749972.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903202157855.png)
+
 ## 9. 输出操作的改写
 新建C++类，继承自UExtensionMethods(写一个函数，然后实现一下，是否存在，然后使用绑定函数)---C++类中新加入动作函数---在Controller.ts中去添加输入动作和对应函数(前提创建好IA，添加至上下文)----修改Look，Move函数(有传参数)的输入值Input Action Value---把视野锁定的也添加上
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260825213934654.png)
