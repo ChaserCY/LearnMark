@@ -1,3 +1,138 @@
+# 概念讲解
+## 是什么
+- 启动js运行环境 V8 Quickjs NodeJs 三引擎选择
+- 实现js运行环境和引擎的交互
+- 生成ue引擎的api的ts声明
+### 打开方式一
+- 自己新建一个或者多个Js环境
+- JS环境中的TS/JS可以调用引擎API
+	- 宏标记后的可以直接访问
+	- 其他API可以通过拓展函数，生成代码访问
+- 引擎通过==动态多播==访问TS/JS
+### 打开方式二
+- TS里直接继承UE的一个类，类似原生UEC++开发
+### 两种方式对比
+- UI、网络，Tick等事件驱动TS/JS逻辑，TS/JS调用服务器或者调用引I擎展示
+- 脚本和非脚本界限分明
+- 支持多JS环境，SDK开发首选
+- 需要从项目初期介入
+- 需要做框架设计
+---沿用UE的Gameplay框架---
+- UE程序猿平滑过渡
+- 沿用UE编辑器的各种能力，体验上接近引擎原生支持
+- 可在项目任意阶段介入
+- 目前还未完全覆盖蓝图的能力
+- 不支持多JS环境
+## 介绍
+### 工具链
+- 主流IDE都有TS的支持
+- 实现了websocket+v8 inspector协议
+	- 主流IDE上断点调试TS
+	- CPU Profiler(VSCode, Chrome dev tool)
+	- 内存快照(Chrome dev tool)
+	- Hot-reload(Chrome dev tool)
+- Web常用工具链
+	- Webpack
+	- Gulp
+### 代码健壮性
+- 静态类型检查
+	- 能==在编辑器检查参数==错误
+- 引用对象生命周期跟踪
+	- 背景：UE下对象即使声明了引用，仍可能被释放
+	- 尝试==访问/传递无效对象==，抛==js==异常
+
+### 性能
+- 脚本执行效率
+	- 除ios均可开启jit
+		- 对android 低端机有帮助
+		- 对服务器ds有帮助
+	- 开启jit后高于lua，不开启和lua差不多
+- 脚本和引擎交互
+	- 反射高于xlua的静态生成代码
+![](图片/UE/PuerTs/PuerTS的一些知识/IMG-20260908143812104.png)
+### 对象存储效率
+- 多份同结构数据最为常见
+	- 面向对象：类->对象
+	- 策划陪表数据
+	- 消息
+- 同样对象结构数量，优于Lua
+
+## 整体实现
+### 涉及技术
+- 实现了什么
+	- 启动js引擎
+	- 支持互访
+	- 对象持有
+- 涉及技术
+	- v8拓展API
+	- UE反射API
+	- UE GC API
+		- 解决 UE 和 V8 两套垃圾回收互相不知情导致的崩溃 / 内存泄露
+	- Libclang
+		- 静态代码生成工具（生成 Wrapper 胶水代码）底层
+		- 静态绑定代码生成器的源码解析内核，扫描 C++ 头文件自动产出胶水代码
+### 反射调用
+- UE函数反射调用关键点
+	- 参数和返回值组成结构体
+- 流程
+	- 栈分配/初始化结构体
+	- 从JS取出参数设置到结构体
+	- UObject::ProcessEvent
+	- 将返回值/输出参数返回给JS
+	- 结构体解析
+**UObject::ProcessEvent：UE 反射系统的函数执行入口，用来动态执行 UFunction。Puerts 动态调用 UE 函数底层依赖该接口；优点是灵活无需预生成绑定代码，缺点是存在反射开销。**
+
+### 对象持有
+- 对象池
+	- FGCObject::AddReferencedObjects
+- UE对象入池，构造JS影子对象，JS影子对象持有UE对象指针
+- JS影子对象被JS虚拟机gc释放，触发回调，UE对象出池
+- 监听UE对象强制释放，标记JS影子对象为无效对象
+	- FObiectDeletelistener:NotifvUObiectDeleted
+
+### Dynamic_Delegate访问TS/JS
+- UDynamicDelegateProxy（普通的UCLASS），成员记录了绑定
+的虚拟机，JS函数
+- 覆盖UObject的ProcessEvent方法
+	- void ProcessEvent(UFunction*, void* Params)
+- Delegate触发，ProcessEvent被调用
+	- 从Params调用信息解出参数
+	- 调用js函数
+	- 如果有返回值，回写返回值到Params
+
+## 蓝图代理自动生成实现剖析
+### 背景
+- 已经成型的项目较难以使用
+- unlua实现了lua“覆写”功能
+- TypeScript有静态类型
+- TypeScript编译器开放API
+![](../../Pasted%20image%2020260908151639.png)
+### 编辑器下代理蓝图生成
+![](图片/UE/PuerTs/PuerTS的一些知识/IMG-20260908151022681.png)
+![](图片/UE/PuerTs/PuerTS的一些知识/IMG-20260908151648287.png)
+### 运行时绑定方案
+- TS构造函数实现
+	- 指明生成的蓝图的GeneratedClass
+		- UTypeScriptGeneratedClass
+		- 该类会记录TS类构造函数调用信息
+	- 设置UClass的ClassConstructor，实现为调用TS的构造函数
+		- 该方式支持CreateDefaultSubobject
+		- 该方式支持CDO的初始化
+- 代理蓝图空函数绑定
+	- 替换空函数的UFuntion为UJSGeneratedFunction
+	- UJSGeneratedFunction记录了绑定的TS函数调用信息
+	- SetNativeFunc修改UFunction的逻辑，改为调用特定TS函数
+	- 把UJSGeneratedFunction的属性设置为Native，阻止通过UFuntion.Script执行
+
+### Hot-reload实现
+- 蓝图重绑定
+	- 如果有对应的代理蓝图，设置对应UTypeScriptGeneratedClass的脏标记
+	- NotifyUObjectCreated，如果检测该对象对应的UTypeScriptGeneratedClass为脏，重新绑定
+- JS代码Hot-reload
+	- 目前用自己实现的代码重加载
+	- 准备改为使用V8内置的hot-reload
+- 效果：做到运行中代码修改马上生效
+
 # PuerTS与U++的些许差别
 
 ![](图片/UE/PuerTs/PuerTS的一些知识/IMG-20260707164554756.png)

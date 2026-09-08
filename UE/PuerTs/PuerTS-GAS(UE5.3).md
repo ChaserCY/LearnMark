@@ -1,17 +1,17 @@
-# 构建环境
+# 构建环境1.0.5
 - 创建项目，调整编辑器设置
 - 创建Plugins，拖入整个PuerTS插件包，导入Assets资源包
 - 拖入package.json，tsconfig.json 文件到项目中，添加global.json文件，限制.NET 的版本为6.0
-- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217245.png)
-- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217303.png)- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217355.png)
+- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211144899.png)
+- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211144962.png)- ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145051.png)
 - 删除Save，.sln，Intermediate，Binaries文件，还有插件的\Plugins\Puerts\Binaries，\Plugins\Puerts\Intermediate文件，然后右键.uproject重构(==插件内部也需要删文件==)
 - 打开.sln文件，然后在.Build.cs文件中加入插件名“EnhancedInput”，“Gameplay Ability”，"GameplayTags",  "GameplayTasks"，“Puerts”，“JsEnv”
 - 在编辑器-插件，启用GAS ,GASAttachEditor插件，编辑器偏好-源代码-启用Rider Uproject打开
 
 
 # 1.项目初始化
-## 开启插件调试窗口
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260616214238879.png)
+## 开启插件调试窗口，其他版本需要找别的开源插件
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145130.png)
 cmd控制台输入：GASAttachEditorShow 可以打开窗口
 
 ## 新建C++类继承Gamemode
@@ -111,34 +111,34 @@ void UGAS_GameInstance::CallTS(FString FunctionName, UObject* Uobject)
 ```
 
 ## 在插件中，运行命令
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217411.png)  
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145177.png)  
 
 在项目目录里cmd命令，添加对应npm包
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217480.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145225.png)
 npm install --save-dev typescript   //不同版本，可能会报错，不然无法运行npm start
  npm install --save-dev typescript@4.7.4
 ## 添加到解决方案条目
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217518.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145259.png)
 
 ## 导入内容
 TypeScript
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217561.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145306.png)
 三个文件各自的作用
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217625.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145355.png)
 
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217676.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145407.png)
 这个位置的名字，必须要和创建的C++类GameInstance
 ## 编辑同步
 在编辑器中，对蓝图进行了修改，就点击上方插件的按钮还有下方的编译
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217732.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145480.png)
 或者使用引擎内的cmd窗口输入：
 ==Puerts.Gen==
 
 C++类的代码进行了修改就需要点击右下角的
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217792.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145528.png)
 
 每次修改完TS文件代码，需要运行测试时，终端运行npm start编译TS->JS
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217833.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145592.png)
 
 ## 编写规则
 
@@ -230,15 +230,15 @@ C++类的代码进行了修改就需要点击右下角的
 
 补充：
 MainGame.ts
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217876.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145638.png)
 GAS.GameInstance.
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217927.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145701.png)
 
 
 ## 添加Debug
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202217966.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145743.png)
 项目设置--插件设置--PuerTS
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202218006.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145788.png)
 
 ## 蓝图Actor测试
 ### 添加一个Actor蓝图，然后添加一个同名的.ts文件在TypeScript/Blueprints目录下
@@ -284,26 +284,26 @@ Fun2(){
 ```
 ### 重写函数(Fun1,Fun2)与新增函数(Fun3)
 Fun1,Fun2 是原蓝图中的自定义事件
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202218049.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145835.png)
 Fun3是TS文件中命名的事件(需要使用时调用)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202218087.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145906.png)
 
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260528202218127.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145968.png)
 
 # 2.基础角色与相机控制
 ## 1. 创建基础角色蓝图，创建子类(Player,Enemy)，创建输入动作，输入操作映射
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529150604003.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146033.png)
 另外还需要创建蓝图==玩家控制器==
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529151011246.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529151130038.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146075.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146124.png)
 
 
 ## 2. 在TypeScript中创建对应结构，还有对应蓝图的ts文件
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529150710449.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146163.png)
 
 
 ## 3. 在Player蓝图中，命名变量和函数，ts中准备进行重写
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529150818776.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146206.png)
 
 ## 4. ts文件中，给Player添加操作映射，写操作函数
 ```ts
@@ -400,8 +400,8 @@ ReceiveBeginPlay(){
 ```
 
 ## 5. 细节设置
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529151457883.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260529151527978.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146245.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146287.png)
 
 ## 6. 限制相机角度
 UE.GameplayStatics.GetPlayerCameraManager(this,0).ViewPitchMin = -65;  
@@ -434,7 +434,7 @@ UE.GameplayStatics.GetPlayerCameraManager(this,0).ViewPitchMax = 25;
 - 创建基础属性集
 - Character基础属性监听
 ## 1.新建BaseAttributeSet类，通过在Rider中直接创建.h,.cpp文件
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608171303619.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146324.png)
 - BaseAttributeSet.h,声明一些基础属性值
 ```cpp
 // Fill out your copyright notice in the Description page of Project Settings.  
@@ -635,16 +635,16 @@ void ABaseCharacter::OnSPAttributeChanged(const FOnAttributeChangeData& Data)
 
 ## 3. 在编辑器中绑定与调用测试
 - 创建数据表格
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170813175.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146369.png)
 
 - 添加对应属性的信息
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170859908.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146422.png)
 
 - 绑定属性集的类与属性的数据表格
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608170948294.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146464.png)
 
 - 测试：从组件中取出对应属性值
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260608171025225.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146505.png)
 
 # 4. 制作GA(技能)
 - 创建继承自UGameplayAbility类的类
@@ -834,19 +834,19 @@ FGameplayAbilityInfo ABaseCharacter::GetAbilityInfo(const TSubclassOf<UBaseGamep
 ```
 
 # 5. GAS技能相关制作
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260616211913594.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146551.png)
 ## 1.被动技能制作(恢复)
 - 创建一个继承自BP_GameplayAbility的蓝图
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151441903.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146596.png)
 - 创建新的Cost Gameplay Effect Class的蓝图类
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151551968.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146640.png)
 - 新建的类中
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151748776.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146687.png)
 - 设置被动技能带来的属性变化
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617151834870.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146748.png)
 
 - 新建被动技能的ts文件
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260617152009751.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146803.png)
 - 添加触发内容
 ```ts
 import * as UE from 'ue';  
@@ -918,20 +918,20 @@ export class BP_BaseCharacter implements BP_BaseCharacter {
 创建GA----创建GE_CD---创建GE_Danmage----创建表格---创建GA.ts(修改)---创建PlayerController.ts(修改)---BP_BaseCharacter.ts中添加内容----创建蒙太奇动画(添加几段动画序列+对应序号，另外动画蓝图中加入插槽)---融合上下身的动画
 
 ### 创建平A的GA与CD的Effect
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260623214348908.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146844.png)
 - 绑定GA_Melee
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151243823.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146886.png)
 - 改技能CD
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151437555.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146935.png)
 
 ### 平A随等级变化的csv表
 - 项目目录新建一个文件夹
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151534113.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211146980.png)
 - 新建.csv 表格
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625151816492.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147021.png)
 - 新建数据表
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260621215026724.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260621215159469.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147058.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147110.png)
 
 ### 激活技能在“角色蓝图.ts”中
 ```ts
@@ -1017,7 +1017,7 @@ HPChangedEvent(Value:number){
 
 ### PlayerController 绑定平A按键，ts中写平A触发逻辑
 - 里面新建一个函数，在ts中重写逻辑
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625153105439.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147153.png)
 - ts逻辑，找到controller控制的角色，使用角色的函数激活技能
 ```ts
 import * as UE from 'ue';  
@@ -1047,10 +1047,10 @@ export class BP_PlayerController implements BP_PlayerController {
 ```
 
 ### 创建平A的蒙太奇动画，分段，加入GA_Melee.ts逻辑
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625153953100.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147203.png)
 - 动画蓝图修改
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625154402162.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625154434980.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147257.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147322.png)
 - GA_Melee.ts
 ```ts
 import * as UE from 'ue';  
@@ -1097,15 +1097,15 @@ export class GA_Melee implements GA_Melee {
 ### 在角色蓝图中的网格体下添加，一个Box碰撞，绑定在骨骼的对应插槽上
 ### 设置碰撞预设(避免没必要的物品触发了碰撞)
 - 角色胶囊体的
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160527976.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147373.png)
 - 角色骨骼网格体的
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160557183.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147414.png)
 - Box的
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625160622621.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147472.png)
 
 
 ### “角色”ts中写入碰撞触发事件
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625155147052.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147522.png)
 
 ### 新建继承自AnimNotify的Unreal类(用在蒙太奇通知处，标签起什么名，对应角色蓝图的函数就起什么名，会直接触发对应函数逻辑)
 ```cpp
@@ -1184,7 +1184,7 @@ EndDamage() {
 
 ### 伤害扣血逻辑，发送标签，使用一个GAS的函数回调
 - 项目设置里加标签
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260625161152137.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147566.png)
 - “基础角色”.ts中进行触发时，发送事件
 ```ts
 //命中标签  
@@ -1256,9 +1256,9 @@ private HitEvent(Payload: UE.GameplayEventData){
 新建UMG蓝图，添加进度条----敌人添加Widget组件--创建UMG蓝图.ts---绑定血条显示的是属性值--- UI旋转面向玩家
 
 - 创建简单的敌人血条显示widget，对数字与进度条的数值创建绑定函数
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260703161809544.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147607.png)
 - 敌人蓝图中添加组件，一定是world显示(这样UI的显示随距离有大小变化)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260703161903733.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147655.png)
 - 创建控件蓝图的ts文件，重写显示文字与数值的绑定函数
 ```ts
 import * as UE from 'ue';  
@@ -1375,7 +1375,7 @@ export class BP_Enemy extends BP_BaseCharacter implements BP_Enemy {
 
 ### 动画蓝图动画
 1. 动画蓝图中创建一个Dead的bool变量
-2. ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260707172403329.png)
+2. ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147706.png)
 
 ### Base与Enmey的添加
 1. 在Base蓝图中添加Dead的bool变量，表示死亡状态
@@ -1433,17 +1433,17 @@ SelfTick(){
 
 ## 6. 敌人简单行为树
 创建AI控制器/黑板---绑定敌人蓝图的pawn---创建导航体积---创建任务(寻找玩家，普通攻击)---新建AI控制。ts(启动行为树)---新建Find，Melee.ts---禁用玩家死亡后的控制
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260712172139970.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147751.png)
 
 ## 7. UI
 ### UI面板搭建(Widget)
 创建三个UMG面板，分别是技能图标，属性图标，还有主体框
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260717194956611.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260715001752956.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147791.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147841.png)
 
 ### UI面板功能实现
 激活控件蓝图中的红色事件(还需创建一个变量Linear Color)---控件图标设置为变量---创建3个控件的ts文件---创建BP_GameplayAbility.ts---在Controller里创建Widget添加到窗口
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260718004239426.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147884.png)
 - UMG_Main.ts
 ```ts
 import * as UE from 'ue';  
@@ -1548,7 +1548,7 @@ export class UMG_AbilitySlot implements UMG_AbilitySlot {
 
 ### UI 属性初始化及绑定
 在Main面板中修改三个圆的颜色---player.ts中添加血量变化时的逻辑(蓝图函数，ts重写，圆圈)---在BP_Player中新建技能数组(开启类）---创建测试GA，添加到Player中
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721174953591.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147922.png)
 Player.ts
 ```ts
 InitAbility()
@@ -1581,18 +1581,18 @@ protected HPChangedEvent(Value: number){
 
 ```
 
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721003641002.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211147974.png)
 - 给人物添加技能
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721174927842.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260721182131517.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148021.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148061.png)
 
 ## 8. 制作技能
 ### 1. 回血技能
 创建ts变量的报错问题(ts中命名-加载-new-卸载)-----添加一个GA(新建对应标签)+三个GE----1.Cost-及时消耗MP数值，2. CD-持续消耗5s，添加阻塞组件，Gameplay Cues（有新标签）-----添加gameplaycue的静态蓝图---在controll蓝图中添加测试，并添加技能同名函数---改controll,gameplayAbility--添加GA.ts(激活)---添加GC_HPRegen.ts(生成粒子)-----GA中播放蒙太奇动画，加载GE_Value，做恢复数值
 
 
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260729170048095.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260808010511552.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148112.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148150.png)
 - GA_HPRegen
 ```ts
 import * as UE from 'ue';  
@@ -1678,26 +1678,35 @@ export class GC_HPRegen implements GC_HPRegen {
 
 ### 2.2 冲刺技能(下)
 在BP_Player视图中创建一个碰撞体球(设置初始碰撞)---在BP_Player.ts中添加球的事件，绑定触发回调的函数(添加到HitActor数组)---重载父类的函数SetFrictionToZero，添加设置摄像机杆的碰撞，球的物理检测 查询/无，球的大小SetSphereRadius，清空HitActor---添加新标签(Dash.Hit)---Player.ts中创建GameplayEvent，在技能中监听它，媒介是那个新标签(类似事件分发器)---在技能中创建两个函数，一个监听(启动等待任务)，一个回调(写主要技能逻辑，如添加GE伤害，造成冲刺撞开，造成眩晕剥夺AI控制器控制权)---眩晕内容：Base写好函数，Enmey重写，在GA_Dash.ts中激活眩晕---标签设置，Dash时不可打断，1,BP_GameplayAbility添加标签 2. 给GA_Dash加入激活过程标签(技能激活时有，结束后没有)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260831165418347.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260831202142350.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901170350910.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148198.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148249.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148285.png)
 
 ### 3.1 射线技能(上)
 创建GA,2个GE，1个伤害GE(持续性消耗，添加标签方便移除。CD老样子。瞬时伤害)---一个特殊标签的蒙太奇动画(后段循环)---创建绑定好输入激活那一块(Controller)---在GA_Laser.ts中处理好激活GE，移除对应GE(BaseCharacter中新加了一个是否在激光的bool)，还有镜头锁定----需要做再次点击按键，取消技能。在Controller的函数中添加事件，然后GA中监听---消耗为0，主动停止技能，使用之前写GameplayAbilityC++中写的判定内容，在开始技能时，加上一个循环定时器，一直判定消耗是否还够，如果不够就停止技能，播放End动作，并清除定时器
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901213926952.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260901214049768.png)
-![](../../Pasted%20image%2020260901214307.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148332.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148381.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148441.png)
 
 ### 3.2 激光技能下
-创建Actor（添加对应组件），动画蓝图(添加到对应骨骼网格体中)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903173335595.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903201039062.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903201749972.png)
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260903202157855.png)
+创建Actor（添加对应组件），动画蓝图(添加到对应骨骼网格体中)---新建Actor.ts文件，添加球体碰撞检测的开始和结束触发(数组存接触对象)，开始时循环定时器发送标签事件，GA_Laser.ts绑定时进行接收---GA_Laser.ts播放动画开始后，开始生成Actor，成功后监听Actor碰撞的事件，回调对对象数组施加GE，还有冲击，眩晕
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148484.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148542.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148583.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148621.png)
+
+### 4.1山崩地裂(上)
+创建GA，三个GE，添加到BP_Player数组，创建输入操作，添加到上下文，controller添加函数，创建蒙太奇动画，在BP_BaseCharacter中创建一个状态变量----创建C++类，继承自AGameplayAbilityTargetActor，创建蓝图继承，创建材质，延迟贴花----
+
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148671.png)
+
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148714.png)
+
+
 
 ## 9. 输出操作的改写
 新建C++类，继承自UExtensionMethods(写一个函数，然后实现一下，是否存在，然后使用绑定函数)---C++类中新加入动作函数---在Controller.ts中去添加输入动作和对应函数(前提创建好IA，添加至上下文)----修改Look，Move函数(有传参数)的输入值Input Action Value---把视野锁定的也添加上
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260825213934654.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148750.png)
 - ExtensionMethods类
 ```cpp
 .h

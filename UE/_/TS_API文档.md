@@ -187,8 +187,12 @@ this.LaserActor.K2_AttachToComponent(
 
 # GAS 
 ## GameplayAbility
-- 异步蒙太奇播放任务
+### 异步蒙太奇播放任务
 ```ts
+**只能在 GameplayAbility 蓝图 / C++ 内使用**
+
+动画和**技能生命周期绑定**，技能取消 / 结束自动停止动画；自带网络预测、多端回调，适合**技能主流程动画（攻击、施法、翻滚、换弹）**
+
 //启动任务
 this.PlayMeleeMontage();//是用函数，相当于启动任务
 
@@ -212,7 +216,7 @@ private PlayMeleeMontage(){
     }
 ```
 
-- 通过Tag发送事件和监听事件
+### 通过Tag发送事件和监听事件
 ```ts
 //发送方，在Controller中
 const GameplayEventData = new UE.GameplayEventData();  
@@ -236,7 +240,7 @@ EndMontage(Payload: UE.GameplayEventData){
 
 ```
 
-- GA.ts中的固定的触发函数和结束回调函数（需要在蓝图激活）
+###  GA.ts中的固定的触发函数和结束回调函数（需要在蓝图激活）
 ```ts
 //GA 触发时自动执行此函数内容
 k2_ActivateAbility(){  
@@ -248,7 +252,7 @@ k2_OnEndAbility(){
 }
 ```
 
-- 移除GA
+### 移除GA
 ```ts
 //获取GameplayTag
 const BaseResponseTag = new UE.GameplayTag("Ability.BaseResponse");
@@ -262,7 +266,7 @@ GetAbilityTag(AbilityTay:UE.GameplayTag):UE.GameplayTagContainer{
 this.AbilitySystemComponent.RemoveActiveEffectsWithTags(this.GetAbilityTag(BaseResponseTag));
 ```
 
-- 其他Character.ts文件中获取自身属性值
+### 其他Character.ts文件中获取自身属性值
 ```ts
 UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent  
 (  
@@ -273,15 +277,28 @@ UE.AbilitySystemBlueprintLibrary.GetFloatAttributeFromAbilitySystemComponent
 //这一串返回float属性值
 ```
 
-- GA中获取施法者对象引用
+### GA中获取施法者对象引用
 ```ts
 this.GetAvatarActorFromActorInfo()
 //可以用as 转换类型，但需要判断是否有效
 ```
 
-- 施加/移除GE伤害
+- 获取所拥有者
 ```ts
+this.GetOwningActorFromActorInfo()
+```
+
+### 施加/移除GE伤害
+```ts
+//单个目标
 this.BP_ApplyGameplayEffectToTarget(Payload.TargetData,LaserDamageClass);
+//群体数组目标
+this.BP_ApplyGameplayEffectToTarget(UE.AbilitySystemBlueprintLibrary.AbilityTargetDataFromActorArray(this.HitActors,true),BlastDamage);
+
+/*通过标签Tag移除GE_Cost*/
+this.BP_RemoveGameplayEffectFromOwnerWithAssetTags(this.Character.GetAbilityTag(LaserCostTag));
+
+
 ```
 
 ## 输入操作的绑定
@@ -330,7 +347,27 @@ void ULF_ExtensionMethods::BindAction(UEnhancedInputComponent* InputComponent, c
     {       InputComponent->BindAction(InputAction, TriggerEvent, Object, FunctionName);  
     }}
 ```
+- 。ts
+```ts
+const TestAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Test.IA_Test")  
+const MeleeAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Melee.IA_Melee")  
+const HPRegenAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_HPRegen.IA_HPRegen")  
+const DashAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Dash.IA_Dash")  
+const LaserAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_Laser.IA_Laser")  
+const GroundBlastAction = UE.InputAction.Load("/Game/BluePrints/Input/Action/IA_GroundBlast.IA_GroundBlast")
 
+
+
+const InputComponent = this.GetComponentByClass(UE.EnhancedInputComponent.StaticClass()) as UE.EnhancedInputComponent;  
+if(InputComponent){  
+    InputComponent.BindAction(TestAction,UE.ETriggerEvent.Started,this,"TestAction"); //这里的第一个函数必须是蓝图函数，或者C++蓝图可以调用的函数  
+    InputComponent.BindAction(MeleeAction,UE.ETriggerEvent.Started, this,"Melee");  
+    InputComponent.BindAction(HPRegenAction,UE.ETriggerEvent.Started, this,"HPRegen");  
+    InputComponent.BindAction(DashAction,UE.ETriggerEvent.Started, this,"Dash");  
+    InputComponent.BindAction(LaserAction,UE.ETriggerEvent.Started, this,"Laser");  
+    InputComponent.BindAction(GroundBlastAction,UE.ETriggerEvent.Started, this,"GroundBlast");  
+}
+```
 ### 传参数的按键动作函数
 ```ts
 Look(ActionValue: UE.InputActionValue) {  
@@ -339,5 +376,138 @@ Look(ActionValue: UE.InputActionValue) {
     this.AddControllerPitchInput(Value2D.Y);  
     }
 ```
+
+## GAS内置类
+### 目标选择设计基类AGameplayAbilityTargetActor
+![](图片/UE/_/TS_API文档/IMG-20260907203921203.png)
+- .h
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+#pragma once  
+  
+#include "CoreMinimal.h"  
+#include "Abilities/GameplayAbilityTargetActor.h"  
+#include "GroundSelectTargetActor.generated.h"  
+  
+/**  
+ * 地面选择目标Actor  
+ */UCLASS()  
+class PTGAS_API AGroundSelectTargetActor : public AGameplayAbilityTargetActor  
+{  
+    GENERATED_BODY()  
+public:  
+    AGroundSelectTargetActor();  
+    protected:  
+    virtual void BeginPlay() override;  
+    public:  
+    virtual void Tick(float DeltaTime) override;  
+    //启用目标选择  
+    virtual void StartTargeting(UGameplayAbility* Ability) override;  
+    //确认目标选择并发送数据  
+    virtual void ConfirmTargetingAndContinue() override;  
+    //获取玩家当前朝向的点，纯函数  
+    UFUNCTION(BlueprintPure)  
+    FVector GetPlayerLookAtPoint();  
+    //SpawnActor时可以作为参数传入  
+    UPROPERTY(EditAnywhere, BlueprintReadWrite,meta = (ExposeOnSpawn = true), Category="GroundSelect")  
+    float SelectRadius = 10.f;  
+};
 ```
+- .cpp
+```cpp
+// Fill out your copyright notice in the Description page of Project Settings.  
+  
+  
+#include "Abilitys/GroundSelectTargetActor.h"  
+  
+#include "Abilities/GameplayAbility.h"  
+  
+AGroundSelectTargetActor::AGroundSelectTargetActor()  
+{  
+}  
+  
+void AGroundSelectTargetActor::BeginPlay()  
+{  
+    Super::BeginPlay();  
+}  
+  
+void AGroundSelectTargetActor::Tick(float DeltaTime)  
+{  
+    Super::Tick(DeltaTime);  
+}  
+  
+void AGroundSelectTargetActor::StartTargeting(UGameplayAbility* Ability)  
+{  
+    Super::StartTargeting(Ability);  
+    //基类成员变量，不会自动初始化，必须要在这个函数手动赋值  
+    PrimaryPC = Cast<APlayerController>(Ability->GetOwningActorFromActorInfo()->GetInstigatorController());  
+}  
+  
+void AGroundSelectTargetActor::ConfirmTargetingAndContinue()  
+{  
+    FVector LookPoint = GetPlayerLookAtPoint();  //获取玩家当前朝向的点  
+    if (LookPoint.Size()!=0)  
+    {       //重叠检测结果  
+       TArray<FOverlapResult> OverlapResults;  
+       //弱指针存储重叠的Actor为什么用弱指针？—目标选择是一个异步过程，从玩家确认到技能真正释放有时间差。如果敌人在这  
+       //期间被别的技能杀死，裸指针会变成悬空指针。弱指针会自动感知对象销毁，安全处理。  
+       TArray<TWeakObjectPtr<AActor>> OverlapActors;  
+       FCollisionQueryParams CollisionParams;  
+       CollisionParams.AddIgnoredActor(PrimaryPC->GetOwner());  
+       //在看到的点进行球体重叠检测  
+       bool IsHit = GetWorld()->OverlapMultiByChannel(  
+       OverlapResults,       LookPoint,       FQuat::Identity,             //无旋转  
+       ECC_Pawn,                   //检测Pawn  
+       FCollisionShape::MakeSphere(SelectRadius), //球体半径  
+       CollisionParams  
+       );       //创建一个数据句柄，用来封装目标信息，GAS的“目标数据容器”，多态数据数组  
+       FGameplayAbilityTargetDataHandle TargetDataHandle;  
+       //创建一个目标位置信息，并且将它加入到目标数据句柄中  
+       FGameplayAbilityTargetData_LocationInfo* CenterLocation = new FGameplayAbilityTargetData_LocationInfo();  
+       CenterLocation->TargetLocation.LiteralTransform = FTransform(LookPoint); //目标位置  
+       CenterLocation->TargetLocation.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform; //目标位置类型，字面值变换  
+          TargetDataHandle.Add(CenterLocation); //0  
+              //创建Actor数组数据  
+       FGameplayAbilityTargetData_ActorArray* ActorArray = new FGameplayAbilityTargetData_ActorArray();  
+       if (IsHit)  
+       {          for (int i = 0;i < OverlapResults.Num();i++)  
+          {             APawn* HitPawn = Cast<APawn>(OverlapResults[i].GetActor());  
+             if (HitPawn && !OverlapActors.Contains(HitPawn))  
+             {                OverlapActors.AddUnique(HitPawn);  
+             }          }          if(!OverlapActors.IsEmpty())  
+          {             ActorArray->SetActors(OverlapActors);  
+             TargetDataHandle.Add(ActorArray); //1  
+          }  
+       }       //检查并且应用目标数据  
+       check(ShouldProduceTargetData())  
+       //如果目标数据有效，就广播目标数据  
+       if (IsConfirmTargetingAllowed())  
+       {          TargetDataReadyDelegate.Broadcast(TargetDataHandle);  
+       }    }    return;  
+}  
+  
+FVector AGroundSelectTargetActor::GetPlayerLookAtPoint()  
+{  
+    FVector ViewLocation;//玩家视口位置  
+    FRotator ViewRotation;//玩家视口旋转  
+    //获取玩家当前朝向的点  
+    PrimaryPC->GetPlayerViewPoint(ViewLocation, ViewRotation);  
+          
+FHitResult HitResult;  
+    FCollisionQueryParams CollisionParams;  
+    CollisionParams.AddIgnoredActor(PrimaryPC->GetOwner());  
+    //单条射线检测  
+    GetWorld()->LineTraceSingleByChannel(  
+       HitResult,       ViewLocation,       ViewLocation + ViewRotation.Vector() * 5000.f,   //沿摄像机朝向延伸5000单位  
+       ECC_Visibility,  
+       CollisionParams                           //附加参数，忽略玩家自己  
+    );  
+    //如果有阻碍  
+    if (HitResult.bBlockingHit)  
+    {       return HitResult.ImpactPoint;   //返回阻碍点  
+    }  
+    return FVector::Zero();  
+}
 ```
+![](图片/UE/_/TS_API文档/IMG-20260907220925302.png)
