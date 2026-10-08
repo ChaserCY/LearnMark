@@ -1,4 +1,60 @@
-
+# 代码书写规范
+## 基础
+	1. 拿到对象先判空 —— UE 侧大量 API 会返回 null 而不是抛异常  
+	2. 静态函数看第一个参数是不是 WorldContextObject*  
+	3. 遇到 C++ 的 `T&` 出参，就用 $ref 包一层，取值用 $unref
+## 生成类 
+	1. 拿类：引擎类用 UE.XXX.StaticClass()，蓝图用 UE.Class.Load("路径.名字_C")  
+	2. 生成：BeginDeferredActorSpawnFromClass → (改属性) → FinishSpawningActor  
+	3. 两个 Transform 必须传同一个，否则位置会跳  
+## 定时器
+	1. 测试用的 Actor 记得 SetLifeSpan，不然地图里会越堆越多
+	2. 纯 TS 函数不是 UFunction → K2_SetTimer("函数名") 无效，必须用 Delegate 版  
+	3. toManualReleaseDelegate 造的委托，用完要 releaseManualReleaseDelegate*  · 游戏逻辑优先 UE 定时器（跟随游戏时间、自动清理）  
+	4. JS 定时器在切关卡后仍会继续跑，务必在适当时机 clearInterval
+## 委托：
+	1. UE 委托：对象.委托名.Add(回调) / .Remove(回调)  
+	2. 回调参数签名必须和类型定义严格一致，IDE 里看提示  
+	3. 涉及 UE 的事件 → 用 UE 委托（生命周期跟着对象走）  
+	4. 纯 JS 内部的事件 → 用 puerts 的 on / off / emit*  
+	*  ⚠️ 内存提示：  
+	1.     挂上去的回调会被 UE 对象**强引用**着。如果目标对象活得比你想的长，  
+	2.    而你又在回调里闭包了一个很大的对象，那这个大对象就一直释放不掉。  
+	3.    不用了记得 .Remove()，或者把回调写成模块级的具名函数。
+## 容器：
+	1. TArray 一定要用 UE.NewArray() 造，别拿 JS 数组冒充  
+	2. TArray 支持 for...of，比写索引循环清爽  
+	3.  UE 的「数组出参」：造空数组 → 传进去 → 函数填好 → 你直接读  
+	4. TMap/TSet 用 UE.NewMap/NewSet，键值类型传 BuiltinXxx 常量  
+	5.  结构体用 new UE.Vector(...) 这种构造；FName/FString/FText 在 TS 里都是 string
+	6. 结构体运算走 UE.KismetMathLibrary
+## 射线检测
+	1. LineTraceSingle 的返回值是「有没有撞到」，撞到什么在 $Ref<HitResult> 出参里  
+	2.  出参三部曲：$ref(new UE.HitResult()) → 传进去 → $unref() 取出来  
+	3. HitResult 常用字段：Location / Normal / Distance / GetActor() / Component  
+	4. TraceTypeQuery1 默认是 Visibility 通道；要打自定义通道用 ConvertToTraceType*  ·DrawDebugType 传 ForDuration 可以在场景里看到射线，调位置时非常有用
+## 类型安全的蓝图加载blueprint.load
+  
+*  │ UE.Class.Load("字符串路径") │ 路径是动态拼出来的（配置表、循环变量）    │*  │                                                               │ 或者资产在别的项目/插件里，没有类型声明   │*   
+*  │ blueprint.load + UE.Game.* │ 路径写死的**蓝图类**资产                 │*  │                                                                               │ 想要补全、想访问蓝图成员、想编译期查错     │*  
+*  
+*  ⚠️⚠️ 关键限制：ue_bp.d.ts 里**只有蓝图类**（继承自 UBlueprint 的资产）。  
+*  
+*      实测你项目的 ue_bp.d.ts：79 个 class 里 68 个带 _C 后缀。  
+*      在这些的 →  能干！  GA_Melee_C / GE_Melee_Damage_C / BP_LaserActor_C*     
+*       不在的    →  干不了  MA_Melee(动画蒙太奇) / IA_Melee(输入动作)  
+*                                       P_HealthRegen(粒子) / BT_Tree(行为树) / IMC_Default  
+*  
+*      原因：这些是**普通资产**，没有「生成的类」，自然也没有 _C 声明。  
+*      但它们本来就没那么痛 —— UE.AnimMontage.Load() 的**返回类型**已经是  
+*      UE.AnimMontage 了，只是路径字符串没被编译期检查而已。  
+*  
+*      真正值得迁移的是 UE.Class.Load()：它返回的是裸的 UE.Class，  
+*      拿不到任何成员信息。  
+*  
+*  ⚠️ 迁移前必须确认：ue_bp.d.ts 是最新的。  **编辑器中的插件按钮**
+*     它由 Puerts 的 DeclarationGenerator 生成，新增蓝图资产后需要重新生成，  
+*     否则新资产的类型不在声明里，编译会报「找不到命名空间」。
 # 纯TS
 - 文件/路径相关模块
 ```ts
@@ -49,16 +105,20 @@ results.push(...getAllTsFiles(fullPath));  //递归拆分添加元素，递归�
 console.log(`\nDone: all imports already exist, nothing to add.`);
 ```
 
+- 特殊变量
+```ts
+```
 # 工具
 - 函数参数可能为空
 ```ts
 A:$Nullable<UE.PrimitiveComponent>       //表示A这个参数可能为空，可以传nullptr，也可以是空类型
 ```
 
-- ts定时器/循环定时器
+- ts定时器/循环定时器与UE工具的定时器
 ```ts
 //定义定时器引用，如果里面！=null，说明定时器还在运行
 _rotationIntervalId: ReturnType<typeof setInterval> | null = null;
+let JsTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 // 用 setInterval 代替 Tick，setInterval是个函数
 this._rotationIntervalId = setInterval(() => {  
@@ -81,8 +141,94 @@ UE.KismetSystemLibrary.K2_UnPauseTimerHandle(this,t);
 //单次定时器
 setTime(执行函数(可以Lambda)，时间(ms));
 
+JsTimeoutId = setTimeout(() => {  
+    console.log('[03] JS setTimeout 触发（3 秒后，只跑一次）');  
+}, 3000);
+
+if (JsTimeoutId !== null) {  
+    clearTimeout(JsTimeoutId);  
+    JsTimeoutId = null;  
+}
+
+--------------------------------------------------------------------------------
+
+//命名(赋值) + 包装委托 + 使用委托定时器(循环/不循环)
+let UeTimerCallback: (() => void) | null = null;
+let UeTimerHandle: UE.TimerHandle | null = null;
+
+UeTimerCallback = () => {  
+    // 这个箭头函数每 1 秒被引擎调用一次  
+    const Now = UE.KismetSystemLibrary.GetGameTimeInSeconds(World);  
+    console.log(`[03][UE定时器] 第 N 次触发，游戏时间 ${Now.toFixed(2)}s`);  
+};
+
+// toManualReleaseDelegate 把普通 JS 函数包装成引擎能识别的委托。  
+// 「ManualRelease」的意思是：**生命周期由你负责**，用完必须手动释放，  
+// 否则这个委托会一直被 JS 侧引用着，可能造成泄漏。  
+const UeDelegate = toManualReleaseDelegate(UeTimerCallback);  
+  
+UeTimerHandle = UE.KismetSystemLibrary.K2_SetTimerDelegate(  
+    UeDelegate,    1.0,        // 间隔 1 秒  
+    true,       // bLooping = 循环  
+    0.0,        // 首次延迟  
+    0.0         // 延迟抖动  
+);
+
+// 清 UE 定时器：如果句柄还有效，取消掉  
+if (UeTimerHandle) {  
+    UE.KismetSystemLibrary.K2_ClearTimerHandle(World, UeTimerHandle);  
+    UeTimerHandle = null;  
+}  
+  
+// 释放手动管理的委托，避免泄漏  
+if (UeTimerCallback) {  
+    releaseManualReleaseDelegate(UeTimerCallback);  
+    UeTimerCallback = null;  
+}
 ```
 
+- ts/UE 委托
+```ts
+const TestActor = UE.GameplayStatics.BeginDeferredActorSpawnFromClass(  
+    World, PointClass, Transform, UE.ESpawnActorCollisionHandlingMethod.AlwaysSpawn  
+);  
+if (!TestActor) return;  
+  
+const Spawned = UE.GameplayStatics.FinishSpawningActor(TestActor, Transform);  
+if (!Spawned) return;
+
+const OnDestroyedHandler = (DestroyedActor: UE.Actor) => {  
+    console.log(`[04] 收到销毁回调：${DestroyedActor.GetName()} 被销毁了`);  
+    UE.KismetSystemLibrary.PrintString(  
+        World, '监听到 Actor 销毁事件', true, false, new UE.LinearColor(1, 0, 1, 1), 6.0, 'Example_4'  
+    );  
+};  
+
+//在销毁的时候触发回调  
+Spawned.OnDestroyed.Add(OnDestroyedHandler);
+
+// ---------- 演示：3 秒后销毁它，触发回调 ----------UE.KismetSystemLibrary.K2_SetTimerDelegate(  
+    toManualReleaseDelegate(() => {  
+        // 先摘回调再销毁，演示 .Remove 的用法  
+        // （这里其实不摘也会触发，因为销毁发生在 Remove 之前 —— 见下方说明）  
+        Spawned.K2_DestroyActor();  
+    }),    3.0,  
+    false  
+);
+--------------------------------------------------------------------------------
+const EventName = 'Example4_CustomEvent';  
+  
+const CustomHandler = (Payload: string) => {  
+    console.log(`[04][on/emit] 收到自定义事件，内容是：${Payload}`);  
+};  
+  
+on(EventName, CustomHandler);      // 订阅  
+emit(EventName, '你好，这是 TS 侧的事件');   // 发布 → 上面的回调立刻执行  
+off(EventName, CustomHandler);     // 退订
+
+```
+![](图片/UE/_/TS_API文档/IMG-20260919180231087.png)
+![](图片/UE/_/TS_API文档/IMG-20260919180421100.png)
 # 函数与方法
 ## 数组
 ```ts
@@ -171,6 +317,7 @@ UE.GameplayStatics.SpawnEmitterAtLocation(
 
 ## 生成物
 ```ts
+//需要 开始生成+完成生成 两步
 this.LaserActor = UE.GameplayStatics.BeginDeferredActorSpawnFromClass(this,LaserActorClass,UE.Transform.Identity);  
 UE.GameplayStatics.FinishSpawningActor(this.LaserActor,UE.Transform.Identity);
 
@@ -184,7 +331,32 @@ this.LaserActor.K2_AttachToComponent(
     )
 ```
 
+## 引用传参
+```ts
+// 看不到的坑：不 $ref 直接传普通对象，UE 写进去的东西你是拿不到的。  
+  
+const Origin: $Ref<UE.Vector> = $ref(new UE.Vector(0, 0, 0));  
+const BoxExtent: $Ref<UE.Vector> = $ref(new UE.Vector(0, 0, 0));  
+  
+UE.KismetSystemLibrary.GetActorBounds(Player, Origin, BoxExtent);  
+  
+// 用 $unref 取出 UE 填好的值  
+const RealOrigin = $unref(Origin);  
+const RealExtent = $unref(BoxExtent);
+```
 
+## 销毁
+```ts
+// 【方式 A】定时自毁 —— 测试场景最推荐，不会在地图里留垃圾  
+Spawned.SetLifeSpan(15.0);   // 15 秒后自动 Destroy  
+
+// 【方式 B】立刻销毁  
+Spawned.K2_DestroyActor();  
+
+// 【方式 C】延迟销毁（需要延时又不想用 SetLifeSpan 时）  
+UE.KismetSystemLibrary.K2_SetTimerDelegate(...) 见 03_Timers.ts
+
+```
 # GAS 
 ## GameplayAbility
 ### 异步蒙太奇播放任务
@@ -511,3 +683,19 @@ FHitResult HitResult;
 }
 ```
 ![](图片/UE/_/TS_API文档/IMG-20260907220925302.png)
+
+# 特殊区分
+## 都是蓝图静态函数库(玩法层/引擎工具层)
+![](图片/UE/_/TS_API文档/IMG-20260919131253297.png)
+
+## blueprint.load()与UE.Class.Load("")
+```ts
+blueprint.load(UE.Game.BluePrints.Ability._03Laser.BP_LaserActor.BP_LaserActor_C);  
+const BP_LaserActor_C = UE.Game.BluePrints.Ability._03Laser.BP_LaserActor.BP_LaserActor_C;  
+  
+// 现在它是个真正的类了  
+const LaserClass: UE.Class = BP_LaserActor_C.StaticClass();
+
+//最后需要卸载
+blueprint.unload(BP_LaserActor_C);
+```

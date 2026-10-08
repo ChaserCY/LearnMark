@@ -1,29 +1,29 @@
 # 安装与配置
 注意：必须是C++项目才妥当
 需要在 `.Build.cs` 里添加对 PuerTS 模块的依赖
-![](图片/UE/U++/PuerTS/IMG-20260508150846117.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080309974.png)
 
 配置TS开发环境
-![](图片/UE/U++/PuerTS/IMG-20260508152144169.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310065.png)
 
 
 PuerTS插件设置
-![](图片/UE/U++/PuerTS/IMG-20260508152411043.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310117.png)
 
 
 如何调试：
-![](图片/UE/U++/PuerTS/IMG-20260508152827596.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310165.png)
 
 编写TS逻辑
-![](图片/UE/U++/PuerTS/IMG-20260508153340648.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310228.png)
 
 TS继承引擎类
-![](图片/UE/U++/PuerTS/IMG-20260508153542556.png)
-![](图片/UE/U++/PuerTS/IMG-20260508160704073.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310262.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310296.png)
 
 
 蓝图Mixin
-![](图片/UE/U++/PuerTS/IMG-20260508153826023.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310328.png)
 **要求**：
 - 每个蓝图只 mixin 一次
 - 必须在 JS 虚拟机初始化逻辑中或使用前执行 `mixin`
@@ -31,39 +31,39 @@ TS继承引擎类
 
 
 实例：
-![](图片/UE/U++/PuerTS/IMG-20260508153929926.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310369.png)
 
 
 对比
-![](图片/UE/U++/PuerTS/IMG-20260508154153458.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310403.png)
 坑
-![](图片/UE/U++/PuerTS/IMG-20260508154323877.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310437.png)
 
 
 加载时序问题
-![](图片/UE/U++/PuerTS/IMG-20260508154802215.png)
-![](图片/UE/U++/PuerTS/IMG-20260508154820065.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310484.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310522.png)
 
 拓展初始化窗口
-![](图片/UE/U++/PuerTS/IMG-20260508155909863.png)
-![](图片/UE/U++/PuerTS/IMG-20260508155948682.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310557.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310609.png)
 
 
 
-![](图片/UE/U++/PuerTS/IMG-20260508155713534.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310670.png)
 
 
 初始化虚拟机的地方
 ==先进后出==
 ![](../../Pasted%20image%2020260508160911.png)
-![](图片/UE/U++/PuerTS/IMG-20260508161632864.png)
-![](图片/UE/U++/PuerTS/IMG-20260508161824827.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310707.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310752.png)
 
 打包注意
-![](图片/UE/U++/PuerTS/IMG-20260508162034759.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310793.png)
 
 
-![](图片/UE/U++/PuerTS/IMG-20260508162128141.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310835.png)
 测试时可以在编辑器测试/打包后测试
 
 
@@ -95,7 +95,7 @@ Promise / async
 - 启动：在C++的游戏实例文件中启动
 - 写TS：在Content/JavaScript文件夹中写.ts文件
 # 继承引擎类功能
-![](图片/UE/U++/PuerTS/IMG-20260508150855053.png)
+![](图片/UE/PuerTs/PuerTS/IMG-20260917080310892.png)
 
 # 关系
 - 一个puerts::FJsEnv就是一个虚拟机实例，虚拟机间数据是隔离的。

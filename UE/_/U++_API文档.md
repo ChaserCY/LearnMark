@@ -325,3 +325,32 @@ checkf(InInputConfig, TEXT("Input Config data asset is null,can not proceed with
 ```cpp
 
 ```
+# 模块
+## HTTP和Json
+```cpp
+//创建一个线程安全的Http请求对象
+TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();  
+//绑定请求成功的回调函数
+Request->OnProcessRequestComplete().BindUObject(this,回调函数引用(对应三个参数));、
+//设置请求地址和方式
+Request->SetURL(RemoteVersionUrl);  
+Request->SetVerb(TEXT("GET"));
+//发送
+Request->ProcessRequest();
+
+//回调函数
+void UHotUpdateSubsystem::OnRemoteVersionResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)  
+{  
+
+   }
+   
+TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
+//绑定请求进度回调  
+Request->OnProcessRequestComplete().BindUObject(this, &UHotUpdateSubsystem::OnDownloadResponse, SavePath);
+Request->OnRequestProgress().BindUObject(this, &UHotUpdateSubsystem::OnDownloadProgress);  
+Request->SetURL(FileUrl);  
+Request->SetVerb(TEXT("GET"));  
+Request->ProcessRequest();
+   
+   
+```

@@ -111,7 +111,7 @@ void UGAS_GameInstance::CallTS(FString FunctionName, UObject* Uobject)
 ```
 
 ## 在插件中，运行命令
-![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145177.png)  
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145177.png)  使用前，需要全量编译一遍：==npx tsc==
 
 在项目目录里cmd命令，添加对应npm包
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211145225.png)
@@ -1695,16 +1695,25 @@ export class GC_HPRegen implements GC_HPRegen {
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148583.png)
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148621.png)
 
-### 4.1山崩地裂(上)
-创建GA，三个GE，添加到BP_Player数组，创建输入操作，添加到上下文，controller添加函数，创建蒙太奇动画，在BP_BaseCharacter中创建一个状态变量----创建C++类，继承自AGameplayAbilityTargetActor，创建蓝图继承，创建材质，延迟贴花----
+### 4.山崩地裂
+创建GA，三个GE，添加到BP_Player数组，创建输入操作，添加到上下文，controller添加函数，创建蒙太奇动画，在BP_BaseCharacter中创建一个状态变量----创建C++类，继承自AGameplayAbilityTargetActor，创建蓝图继承，创建材质，延迟贴花----创建贴花Actor，继承自上面C++类，创建ts，每帧调用C++类里的玩家目标点，设置法阵位置----创建GA.ts，补全编辑器自定义事件，函数，绑定---GA，激活技能直接创建循环蒙太奇，生成对象数据。成功释放以后，播放结束动画/特效，提交CD，Cost，开始UICD，产生伤害，冲击...
 
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148671.png)
 
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148714.png)
 
 
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908215045707.png)
 
-## 9. 输出操作的改写
+### 5. 火焰术
+依旧老几套创建----蒙太奇动画内有通知两个函数，推拉，---C++中继承那个对象----创建GameplayCue，添加对应特效，ts中创建特效附着---死亡移除所有Tag----净化燃烧Actor，进入碰撞箱移除标签---敌人AI，着火优先去净化(创建服务，查找死亡，在着火，寻找净化点)---死亡全移除GE---
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260909200236040.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260909202522906.png)
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260909205102254.png)
+
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260909210818603.png)
+
+# 6. 输出操作的改写
 新建C++类，继承自UExtensionMethods(写一个函数，然后实现一下，是否存在，然后使用绑定函数)---C++类中新加入动作函数---在Controller.ts中去添加输入动作和对应函数(前提创建好IA，添加至上下文)----修改Look，Move函数(有传参数)的输入值Input Action Value---把视野锁定的也添加上
 ![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260908211148750.png)
 - ExtensionMethods类
@@ -1794,3 +1803,7 @@ Move(ActionValue: UE.InputActionValue) {
     this.AddMovementInput(RightVector,Value2D.X);  
     }
 ```
+
+# 7.打包
+编辑器-打包-添加资产-JavaScript
+![](图片/UE/PuerTs/PuerTS-GAS(UE5.3)/IMG-20260910170223001.png)

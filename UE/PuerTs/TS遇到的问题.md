@@ -2,7 +2,7 @@
 2. 有个Nuget配置文件引用到了已删除的D盘路径，需要删除对应行内容
 3. VS编辑器的共享库，SDK的位置引用到已删除的D盘，卸载重装无效，需要改==注册表==
 4. Rider直接打开.sln文件卡死，退出并删除.idea文件，然后用rider打开.uproject文件
-5. 编写的ts文件没有生效，是在MainGame.ts文件底部没有添加新建的ts文件路径
+5. 编写的ts文件没有生效，是在MainGame.ts文件底部没有添加新建的ts文件路径(最常见，可以参考Unlua使用接口，直接关联)
 6. 导入文件的路径要以，/Game开头，....的要以UE开头
 7. 右键，左键一个GA蓝图文件，编辑器直接崩溃，暂时没有找到好的方法，就删了，重新建一个同名的，设置好
 8. 新建的ts文件的路径上有爆红，是编辑器新建的内容没有按按钮刷新，导致代码中没有相关路径，对象的提示
@@ -25,7 +25,6 @@
 	  - Die、ABP_Sinbi 在 ReceiveBeginPlay 之前都是 undefined
 14. AI行为树没有启动
 	1. 行为树下的任务文件在ts中，导入没有加入后缀_C（AssetPath里都是_C结尾，没有检查）
-	2. 
 15. 出现未定义的报错
 	1. 可能是定义位置问题(ts,蓝图)
 	2. begin初始化时的调用顺序不对
@@ -103,3 +102,53 @@
 	1. **EXCEPTION_ACCESS_VIOLATION 内存访问违规（野指针 / 已经释放的内存又去读写）![](图片/UE/PuerTs/TS遇到的问题/IMG-20260907162215272.png)**
 	2. 解决：将一些变量，在使用时，判断是否有效
 	3. 解决2：double free 把添加for结果的数组，写在了for的里面，重复添加数组，销毁时，会重复销毁数组，访问到空指针![](图片/UE/PuerTs/TS遇到的问题/IMG-20260907202639631.png)
+
+22. 持续燃烧的buff特效在GameplayCue上面不显示
+	1. 莫名其妙自己好了，标签
+23. 命中目标数组，执行BP_BaseCharacter的函数时，出现了找不到函数的情况
+	1. 原因：Actor as BP_BaseCharacter 在js中不会进行转换，必须在if中加入类型判断
+	2. if(Actor ==instanceof== BP_BaseCharacter&&!Actor.Dead)  
+	3. 另外这个Dead如果不存在，!undefined = true，刚好能绕过原来的检测
+24. 资产黄色警告，没有绑定UE的版本，右键资产目录，“重新保存所有”
+25. 打包出来，Content内没有JavaScript文件夹，打开.exe直接崩溃
+	1. **Encountered 1 object(s) breaking Disregard for GC assumptions. Please check log for details.**![](图片/UE/PuerTs/TS遇到的问题/IMG-20260910200151760.png)
+	![](图片/UE/PuerTs/TS遇到的问题/IMG-20260910204443424.png)
+	2. 解决方式：
+	- ==打包添加额外的烘焙资产，还有额外的非资产目录==![](图片/UE/PuerTs/TS遇到的问题/IMG-20260910203155060.png)
+	- 更改mixin到C++类的架构，只能mixin到蓝图(前提：C++，蓝图必须激活该函数，允许重写，才可对蓝图函数mixin)，翻阅log发现的==LogGarbage==
+	- 报错：
+		1. 打包后的Puerts类加载问题报错
+		- ![](图片/UE/PuerTs/TS遇到的问题/IMG-20260911153628474.png)
+		2. 还有log中指出的LogGarbage: Warning: Disregard for GC object None referencing Function /Script/PTGAS.BasePlayerController:ReceiveBeginPlay which is not part of root set
+		3. 这个机制有一个严格的前提假设：**常驻池里的对象（C++类），绝对不能==引用==后来动态创建、需要被 GC 回收的普通对象**
+		4. **这个 Warning 并不是“普通的警告”，而是 Fatal Error 在收集崩溃证据时的“先导日志”**，一旦瞬间中断，**引擎就只能打印出第 1 个违规对象**，后续如果还有第 2 个、第 3 个违规对象，你就永远看不到了
+	- 原理：
+		-  **C++ 原生类**属于原生模块（/Script/PTGAS）。引擎启动时，原生类 UClass 会被直接锁进**常驻内存池（Disregard for GC）**，引擎假设它的类结构在运行期间是**绝对不可变**的。
+		
+		- 当你在 TS 中 mixin 原生类并写了 ReceiveBeginPlay 时，Puerts 会在底层**动态造一个 UFunction 挂到 C++ 类上**。
+	    
+		- **常驻的 C++ 类引用了后来的动态 UFunction**，直接打破了 UE 的内存安全假设，导致打包后一启动引擎就 Fatal Error 崩溃退出。
+
+25.无法热更
+	1. 能找到热更文件，但是没法进行逻辑更改
+	2. 删除源文件的JavaScript文件夹后，重新编译，只有增量编译的文件
+		埋在项目文件夹package.json文件中，npm start就是启动编译tsc --watch 是增量编译
+		全量编译，使用：npx tsc  会把JavaScript文件全部替换
+	3. Saved文件夹无法进行热更
+
+26. 冷热更后无法控制角色
+	1. 原因：是开始关卡蓝图中的Set Only UI Mode状态未清除导致的
+	2. ==解决==：按钮点击后，Set Only Game Mode 让控制返回到游戏中
+
+27. .h文件委托的问题
+	1. 常用参数类型只能传入值
+	2. 修改了.h文件中的委托，需要重新启动编辑器，不然会崩溃，修改了类布局
+
+总结最大的几个问题：
+1. 需要对puerts的ts代码整个过程有所认识
+2. 对ts代码本身的一些语法，用法有所了解
+3. ts调用前一定要激活一些函数或者红色事件(C++类中可以不写，写了必须加super.)
+4. mixin只能作用于蓝图
+5. V8与UE引擎双方的GC
+6. 打包要包含额外非资产目录(JavaScript)，额外烘焙资产(特效，蓝图，资源)
+7. 需要不同AI进行生成内容的审计

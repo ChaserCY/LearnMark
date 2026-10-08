@@ -601,3 +601,25 @@ bSuccess: $Ref\<boolean> = $ref(false);
 
 ## 混合使用
 ![](图片/UE/PuerTs/PuerTS的一些知识/IMG-20260721223244991.png)
+
+# Mixin完整混入流程实例
+**常驻池里的对象，绝对==不能引用==后来动态创建、需要被 GC 回收的普通对象**
+1. **C++ 原生类（Native Class）与蓝图类的区别：**
+    
+    - **C++ 类（如 ABasePlayerController）**：在引擎启动和模块加载的最早期由 Native 代码生成。在进入游戏主循环前，所有 C++ 类的 UClass 以及它的类结构（包括挂在类上的函数定义）都会被引擎视为**永久常驻内存**，进入 **Disregard for GC 池**。
+        
+    - **蓝图类（BlueprintGeneratedClass）**：是作为普通资产加载的，它们通常**不属于** Disregard for GC 池，参与正常的 GC 引用计数，因此怎么 mixin 都不会破坏这个假设。
+	实在想要C++类，只有 在 C++ 中手动把该 UFunction 设为 Root
+2. **Puerts mixin 在底层干了什么：**
+    
+    - 当你在 TypeScript 里执行 mixin(BasePlayerController, ...) 时，Puerts 底层会为被混入的方法（比如 ReceiveBeginPlay）**动态生成或修改一个 UFunction 对象**，并将其挂入 BasePlayerController 的==函数列表/反射表==中。
+        
+    - 这个动态生成的 UFunction 是普通创建的对象，**没有被打上常驻根集合（Root Set）标记**。
+        
+    - 结果就是：**常驻池里的 Native Class 引用了一个普通需要 GC 的动态 UFunction**，在启动阶段的 VerifyGCAssumptions() 检测中被引擎直接当作致命异常截获。
+3. **Root**
+	在虚幻引擎中，**“非 Root 的 UObject” 指的就是：没有被加入到“根集合（Root Set）”中、随时可能因为没人引用而被垃圾回收（GC）销毁的普通 UObject 对象。**
+	
+	其实，你在游戏中 **99% 动态创建出来的 UObject，默认全都是“非 Root”的**。
+	 它的命运完全取决于**有没有一条由 UPROPERTY() 构成的引用链条把它连到某个 Root 对象上**。
+

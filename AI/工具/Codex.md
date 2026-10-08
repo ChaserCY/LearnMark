@@ -1,3 +1,9 @@
+codex resume --last                    # 直接续上最近一次会话，不弹选择器
+codex resume                             # 弹出会话列表选择器（显示时间、首条 prompt、轮数）
+codex resume <SESSION_ID>    # 按 UUID 或会话名恢复指定会话
+codex resume --last --all            # 跨所有目录找最近的会话（默认只过滤当前工作目录）
+
+
 # 1. 可以给项目创建Git仓库，使用分支树，多线程并行开发
 
 # 2. 可以在右侧，进行项目实际预览，并进行针对性==批注==，进行修改更新
